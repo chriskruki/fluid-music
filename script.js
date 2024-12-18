@@ -34,7 +34,7 @@ let config = {
   DYE_RESOLUTION: 1024,
   CAPTURE_RESOLUTION: 512,
   DENSITY_DISSIPATION: 1,
-  VELOCITY_DISSIPATION: 0.2,
+  VELOCITY_DISSIPATION: 0.1,
   PRESSURE: 0.8,
   PRESSURE_ITERATIONS: 20,
   CURL: 30,
@@ -46,7 +46,7 @@ let config = {
   PAUSED: false,
   BACK_COLOR: { r: 0, g: 0, b: 0 },
   TRANSPARENT: false,
-  BLOOM: true,
+  BLOOM: false,
   BLOOM_ITERATIONS: 8,
   BLOOM_RESOLUTION: 256,
   BLOOM_INTENSITY: 0.8,
@@ -54,7 +54,10 @@ let config = {
   BLOOM_SOFT_KNEE: 0.7,
   SUNRAYS: true,
   SUNRAYS_RESOLUTION: 196,
-  SUNRAYS_WEIGHT: 1.0
+  SUNRAYS_WEIGHT: 1.0,
+  MIRROR_MODE: false,
+  SPLAT_SPEED: 1000,
+  SPLAT_COUNT: 5
 }
 
 class PointerPrototype {
@@ -201,6 +204,73 @@ function startGUI() {
   gui.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords)
   gui.add(config, 'COLORFUL').name('colorful')
   gui.add(config, 'PAUSED').name('paused').listen()
+  gui.add(config, 'SPLAT_SPEED', 100, 2000).name('splat speed') // New setting for splat speed
+  gui.add(config, 'SPLAT_COUNT', 1, 50).name('splat count') // New setting for splat count
+
+  gui
+    .add(
+      {
+        fun: () => {
+          createSplatsRight()
+        }
+      },
+      'fun'
+    )
+    .name('Splats Right')
+
+  gui
+    .add(
+      {
+        fun: () => {
+          createSplatsLeft()
+        }
+      },
+      'fun'
+    )
+    .name('Splats Left')
+  gui
+    .add(
+      {
+        fun: () => {
+          createSplatsSide()
+        }
+      },
+      'fun'
+    )
+    .name('Splats Side')
+
+  gui
+    .add(
+      {
+        fun: () => {
+          createSplatsUp()
+        }
+      },
+      'fun'
+    )
+    .name('Splats Up')
+
+  gui
+    .add(
+      {
+        fun: () => {
+          createSplatsDown()
+        }
+      },
+      'fun'
+    )
+    .name('Splats Down')
+
+  gui
+    .add(
+      {
+        fun: () => {
+          createCornerSplats()
+        }
+      },
+      'fun'
+    )
+    .name('Corner Splats')
 
   gui
     .add(
@@ -212,6 +282,8 @@ function startGUI() {
       'fun'
     )
     .name('Random splats')
+
+  gui.add(config, 'MIRROR_MODE').name('Mirror Mode')
 
   let bloomFolder = gui.addFolder('Bloom')
   bloomFolder.add(config, 'BLOOM').name('enabled').onFinishChange(updateKeywords)
@@ -225,24 +297,7 @@ function startGUI() {
   let captureFolder = gui.addFolder('Capture')
   captureFolder.addColor(config, 'BACK_COLOR').name('background color')
   captureFolder.add(config, 'TRANSPARENT').name('transparent')
-  captureFolder.add({ fun: captureScreenshot }, 'fun').name('take screenshot')
-
-  let github = gui
-    .add(
-      {
-        fun: () => {
-          window.open('https://github.com/PavelDoGreat/WebGL-Fluid-Simulation')
-          ga('send', 'event', 'link button', 'github')
-        }
-      },
-      'fun'
-    )
-    .name('Github')
-  github.__li.className = 'cr function bigFont'
-  github.__li.style.borderLeft = '3px solid #8C8C8C'
-  let githubIcon = document.createElement('span')
-  github.domElement.parentElement.appendChild(githubIcon)
-  githubIcon.className = 'icon github'
+  //   captureFolder.add({ fun: captureScreenshot }, 'fun').name('take screenshot');
 
   if (isMobile()) gui.close()
 }
@@ -958,7 +1013,6 @@ const blit = (() => {
       gl.clearColor(0.0, 0.0, 0.0, 1.0)
       gl.clear(gl.COLOR_BUFFER_BIT)
     }
-    // CHECK_FRAMEBUFFER_STATUS();
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
   }
 })()
@@ -1380,6 +1434,7 @@ function render(target) {
 
   if (!config.TRANSPARENT) drawColor(target, normalizeColor(config.BACK_COLOR))
   if (target == null && config.TRANSPARENT) drawCheckerboard(target)
+
   drawDisplay(target)
 }
 
@@ -1387,6 +1442,208 @@ function drawColor(target, color) {
   colorProgram.bind()
   gl.uniform4f(colorProgram.uniforms.color, color.r, color.g, color.b, 1)
   blit(target)
+}
+
+function drawMirror(target) {
+  const width = canvas.width
+  const height = canvas.height
+  const n = 12 // Number of mirrors, you can adjust this value
+  const angleIncrement = (2 * Math.PI) / n
+
+  // Save the current framebuffer
+  gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fbo : null)
+
+  // Clear the target
+  gl.clear(gl.COLOR_BUFFER_BIT)
+
+  for (let i = 0; i < n; i++) {
+    // Save the current context state for each iteration
+    gl.viewport(0, 0, width, height)
+
+    // Apply transformations
+    const angle = i * angleIncrement
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+
+    const transformMatrix = new Float32Array([
+      cos,
+      -sin,
+      0,
+      0,
+      sin,
+      cos,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1
+    ])
+
+    // Set the transformation matrix
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(colorProgram.program, 'uMatrix'),
+      false,
+      transformMatrix
+    )
+
+    // Flip the context horizontally
+    const flipMatrix = new Float32Array([-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+    gl.uniformMatrix4fv(gl.getUniformLocation(colorProgram.program, 'uMatrix'), false, flipMatrix)
+
+    // Draw the existing canvas content onto the flipped context
+    blit(target)
+
+    // Reset the transformation matrix
+    const identityMatrix = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(colorProgram.program, 'uMatrix'),
+      false,
+      identityMatrix
+    )
+  }
+
+  // Restore the default framebuffer
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+}
+
+function createSplatsRight() {
+  const centerY = 0.5 // Center of the screen in normalized coordinates
+  const splatCount = config.SPLAT_COUNT // Use config setting
+  const splatInterval = 0.1 // Interval between splats in normalized coordinates
+  const splatSpeed = config.SPLAT_SPEED // Use config setting
+
+  for (let i = 0; i < splatCount; i++) {
+    const x = i * splatInterval
+    const y = centerY
+    const dx = splatSpeed
+    const dy = 0
+    const color = generateColor()
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    splat(x, y, dx, dy, color)
+  }
+}
+
+function createSplatsLeft() {
+  const centerY = 0.5
+  const splatCount = config.SPLAT_COUNT // Use config setting
+  const splatInterval = 0.1
+  const splatSpeed = -config.SPLAT_SPEED // Use config setting
+
+  for (let i = 0; i < splatCount; i++) {
+    const x = 1 - i * splatInterval
+    const y = centerY
+    const dx = splatSpeed
+    const dy = 0
+    const color = generateColor()
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    splat(x, y, dx, dy, color)
+  }
+}
+
+function createSplatsUp() {
+  const centerX = 0.5
+  const splatCount = config.SPLAT_COUNT // Use config setting
+  const splatInterval = 0.1
+  const splatSpeed = config.SPLAT_SPEED // Use config setting
+
+  for (let i = 0; i < splatCount; i++) {
+    const x = centerX
+    const y = i * splatInterval
+    const dx = 0
+    const dy = splatSpeed
+    const color = generateColor()
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    splat(x, y, dx, dy, color)
+  }
+}
+
+function createSplatsSide() {
+  const centerY = 0.5
+  const splatCount = config.SPLAT_COUNT // Use config setting
+  const splatInterval = 0.1
+  const splatSpeed = config.SPLAT_SPEED // Use config setting
+
+  for (let i = 0; i < splatCount; i++) {
+    const x = 1 - i * splatInterval
+    const y = 0.4
+    const dx = -splatSpeed
+    const dy = 0
+    const color = generateColor()
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    splat(x, y, dx, dy, color)
+  }
+
+  for (let i = 0; i < splatCount; i++) {
+    const x = i * splatInterval
+    const y = 0.6
+    const dx = splatSpeed
+    const dy = 0
+    const color = generateColor()
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    splat(x, y, dx, dy, color)
+  }
+}
+
+function createSplatsDown() {
+  const centerX = 0.5
+  const splatCount = config.SPLAT_COUNT // Use config setting
+  const splatInterval = 0.1
+  const splatSpeed = -config.SPLAT_SPEED // Use config setting
+
+  for (let i = 0; i < splatCount; i++) {
+    const x = centerX
+    const y = 1 - i * splatInterval
+    const dx = 0
+    const dy = splatSpeed
+    const color = generateColor()
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    splat(x, y, dx, dy, color)
+  }
+}
+
+function createCornerSplats() {
+  const centerX = 0.5 // Center of the screen in normalized coordinates
+  const centerY = 0.5 // Center of the screen in normalized coordinates
+  const splatSpeed = config.SPLAT_SPEED // Use config setting
+  const splatCount = config.SPLAT_COUNT // Use config setting
+
+  // Define the corners
+  const corners = [
+    { x: 0, y: 0 }, // Top-left corner
+    { x: 1, y: 0 }, // Top-right corner
+    { x: 0, y: 1 }, // Bottom-left corner
+    { x: 1, y: 1 } // Bottom-right corner
+  ]
+
+  // Create splats from each corner towards the center
+  corners.forEach((corner) => {
+    for (let i = 0; i < splatCount; i++) {
+      const dx = (centerX - corner.x) * splatSpeed * 5
+      const dy = (centerY - corner.y) * splatSpeed * 5
+      const color = generateColor()
+      color.r *= 10.0
+      color.g *= 10.0
+      color.b *= 10.0
+      splat(corner.x, corner.y, dx, dy, color)
+    }
+  })
 }
 
 function drawCheckerboard(target) {
@@ -1409,6 +1666,7 @@ function drawDisplay(target) {
     gl.uniform2f(displayMaterial.uniforms.ditherScale, scale.x, scale.y)
   }
   if (config.SUNRAYS) gl.uniform1i(displayMaterial.uniforms.uSunrays, sunrays.attach(3))
+
   blit(target)
 }
 
