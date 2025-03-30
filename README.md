@@ -1,17 +1,68 @@
-# WebGL Fluid Simulation
+# Audio Streaming Server
 
-[Play here](https://paveldogreat.github.io/WebGL-Fluid-Simulation/)
+A simple audio streaming server that captures audio from input devices and streams it as MP3 audio.
 
-<img src="/screenshot.jpg?raw=true" width="880">
+## Features
 
-## References
+- Real-time audio streaming using [Audify](https://github.com/almoghamdani/audify)
+- Low-latency audio capture and MP3 encoding
+- Device selection and enumeration
+- Health check endpoints
+- Multiple concurrent client support
 
-https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu
+## Requirements
 
-https://github.com/mharrys/fluids-2d
+- Node.js 14 or higher
+- npm or yarn
+- Proper audio device drivers
 
-https://github.com/haxiomic/GPU-Fluid-Experiments
+## Installation
+
+Clone the repository and install dependencies:
+
+```bash
+npm install
+```
+
+## Usage
+
+1. Start the server:
+
+```bash
+npm run dev
+```
+
+2. The server will start on port 3000 (configurable)
+
+3. Available endpoints:
+   - `/stream` - Main streaming endpoint (audio/mpeg)
+   - `/health` - Health check endpoint
+   - `/devices` - List available audio devices
+
+## Configuration
+
+Configuration settings are located in `audio/src/config.ts`.
+
+Default configuration:
+
+```typescript
+{
+  port: 3000,
+  audioDevice: 'Microphone (NVIDIA Broadcast)',
+  channels: 2,
+  sampleRate: 44100,
+  bitrate: 192,
+}
+```
+
+## Implementation Details
+
+This project uses:
+
+- **Audify**: Cross-platform library for real-time audio input/output
+- **Node-lame**: MP3 encoding for streaming
+- **Express**: Web server framework
 
 ## License
 
-The code is available under the [MIT license](LICENSE)
+MIT

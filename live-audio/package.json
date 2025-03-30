@@ -1,0 +1,26 @@
+{
+  "name": "live-audio-streaming",
+  "version": "1.0.0",
+  "description": "Live audio broadcasting and streaming with Node.js, FFmpeg, and React",
+  "scripts": {
+    "install:server": "cd server && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:server && npm run install:frontend",
+    "start:server": "cd server && npm run dev",
+    "start:frontend": "cd frontend && npm run dev",
+    "start": "concurrently \"npm run start:server\" \"npm run start:frontend\""
+  },
+  "keywords": [
+    "audio",
+    "streaming",
+    "ffmpeg",
+    "react",
+    "nodejs",
+    "hls"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
