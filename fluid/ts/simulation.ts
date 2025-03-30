@@ -356,8 +356,8 @@ function createCornerSplats(
   // Create splats from each corner towards the center
   corners.forEach((corner) => {
     for (let i = 0; i < splatCount; i++) {
-      const dx = (centerX - corner.x) * splatSpeed * 5
-      const dy = (centerY - corner.y) * splatSpeed * 5
+      const dx = (centerX - corner.x) * splatSpeed * 20
+      const dy = (centerY - corner.y) * splatSpeed * 20
       const color = generateColor()
       color.r *= 10.0
       color.g *= 10.0

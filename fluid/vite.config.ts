@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   root: './',
@@ -11,7 +14,7 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html')
+        main: path.resolve(__dirname, 'index.html')
       }
     }
   },
@@ -21,7 +24,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'ts')
+      '@': path.resolve(__dirname, 'ts')
     }
   }
 })
