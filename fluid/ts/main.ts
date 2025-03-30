@@ -5,8 +5,8 @@ import {
   config,
   getResolution,
   isMobile,
-  pointers,
   PointerPrototype,
+  pointers,
   scaleByPixelRatio,
   splatStack
 } from './config'
@@ -54,10 +54,11 @@ import { render } from './rendering'
 import {
   createCornerSplats,
   createSplatsDown,
+  createSplatsHorizontal,
   createSplatsLeft,
   createSplatsRight,
-  createSplatsSide,
   createSplatsUp,
+  createSplatsVertical,
   generateColor,
   multipleSplats,
   splatPointer,
@@ -67,6 +68,7 @@ import {
 import { setupEventListeners } from './input'
 
 import { startGUI } from './gui'
+import { initRemoteControl, processRemoteActions } from './remote'
 
 // Define the debug info interface for TypeScript
 interface DebugInfo {
@@ -362,21 +364,17 @@ function applyInputs(): void {
 
 // Update function called on each animation frame
 function update(): void {
-  if (!gl || !canvas) {
-    return
-  }
-
-  // Update debug information if enabled
-  if (window.debugInfo && config.SHOW_DEBUG) {
-    window.debugInfo.updateAnimationStatus('Running')
-    window.debugInfo.incrementFrameCounter()
-    window.debugInfo.updateCanvasInfo(`${canvas.width}x${canvas.height}`)
-  }
+  if (!gl || !canvas) return
 
   const dt = calcDeltaTime()
   if (resizeCanvas()) initFramebuffers()
   updateColors(dt)
   applyInputs()
+
+  // Process any remote inputs
+  if (gl && canvas) {
+    processRemoteActions(gl, splatProgram, velocity, dye, canvas, blit)
+  }
 
   // Run simulation steps if not paused
   if (!config.PAUSED) {
@@ -427,9 +425,7 @@ function update(): void {
 
 // Initialization function
 function init(): void {
-  if (!canvas || !gl || !ext) {
-    return
-  }
+  if (!canvas || !gl || !ext) return
 
   // Update debug info
   if (window.debugInfo) {
@@ -507,6 +503,9 @@ function init(): void {
   initFramebuffers()
   updateKeywords()
 
+  // Initialize remote control
+  initRemoteControl()
+
   // Start GUI
   const customSplatsRight = (): void => {
     if (!gl || !canvas) return
@@ -524,9 +523,13 @@ function init(): void {
     if (!gl || !canvas) return
     createSplatsDown(gl, splatProgram, velocity, dye, canvas, blit)
   }
-  const customSplatsSide = (): void => {
+  const customSplatsHorizontal = (): void => {
     if (!gl || !canvas) return
-    createSplatsSide(gl, splatProgram, velocity, dye, canvas, blit)
+    createSplatsHorizontal(gl, splatProgram, velocity, dye, canvas, blit)
+  }
+  const customSplatsVertical = (): void => {
+    if (!gl || !canvas) return
+    createSplatsVertical(gl, splatProgram, velocity, dye, canvas, blit)
   }
   const customCornerSplats = (): void => {
     if (!gl || !canvas) return
@@ -534,9 +537,10 @@ function init(): void {
   }
 
   startGUI(
+    customSplatsHorizontal,
+    customSplatsVertical,
     customSplatsRight,
     customSplatsLeft,
-    customSplatsSide,
     customSplatsUp,
     customSplatsDown,
     customCornerSplats,

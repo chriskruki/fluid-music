@@ -264,7 +264,7 @@ function createSplatsUp(
   }
 }
 
-function createSplatsSide(
+function createSplatsHorizontal(
   gl: WebGLRenderingContext,
   splatProgram: Program,
   velocity: DoubleFBO,
@@ -293,6 +293,43 @@ function createSplatsSide(
     const y = 0.6
     const dx = splatSpeed
     const dy = 0
+    const color = generateColor()
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+  }
+}
+
+function createSplatsVertical(
+  gl: WebGLRenderingContext,
+  splatProgram: Program,
+  velocity: DoubleFBO,
+  dye: DoubleFBO,
+  canvas: HTMLCanvasElement,
+  blit: (destination: FBO) => void
+): void {
+  const splatCount = config.SPLAT_COUNT // Use config setting
+  const splatInterval = 0.1
+  const splatSpeed = config.SPLAT_SPEED // Use config setting
+
+  for (let i = 0; i < splatCount; i++) {
+    const x = 0.4
+    const y = 1 - i * splatInterval
+    const dx = 0
+    const dy = -splatSpeed
+    const color = generateColor()
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+  }
+
+  for (let i = 0; i < splatCount; i++) {
+    const x = 0.6
+    const y = 1 - i * splatInterval
+    const dx = 0
+    const dy = -splatSpeed
     const color = generateColor()
     color.r *= 10.0
     color.g *= 10.0
@@ -439,7 +476,8 @@ export {
   createSplatsLeft,
   createSplatsUp,
   createSplatsDown,
-  createSplatsSide,
+  createSplatsHorizontal,
+  createSplatsVertical,
   createCornerSplats,
   generateColor,
   Color

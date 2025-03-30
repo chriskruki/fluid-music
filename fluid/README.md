@@ -1,59 +1,93 @@
-# WebGL Fluid Simulation
+# WebGL Fluid Simulation with Remote Control
 
-This is a WebGL fluid simulation project converted from JavaScript to TypeScript. The simulation runs in real-time in the browser and provides interactive fluid dynamics visualization.
-
-## Project Structure
-
-- `/fluid/js/` - Original JavaScript implementation
-- `/fluid/ts/` - TypeScript implementation
-- `/dist/` - Compiled JavaScript output (generated after build)
+A WebGL-based fluid simulation that can be controlled remotely via WebSockets. This project includes both a simulation page and a separate control page that can be used to manipulate the fluid remotely.
 
 ## Features
 
-- Real-time WebGL fluid simulation
-- Various effects like bloom and sunrays
-- Interactive controls via GUI
-- Mobile-friendly
-- Multiple splat creation methods
-- Screenshot capture
+- WebGL-based fluid simulation with adjustable parameters
+- Real-time remote control via WebSockets
+- Multiple control patterns and effects
+- Multi-touch support
+- User-friendly control interface
 
-## Setup and Run
+## Project Structure
 
-1. Install dependencies:
+- `/ts`: TypeScript source files for the fluid simulation
+- `/static`: Static assets (CSS, images)
+- `server.ts`: TypeScript WebSocket server implementation
+- `control.html`: Remote control interface
 
-   ```
-   npm install
-   ```
+## Installation
 
-2. Build the TypeScript code:
+1. Clone the repository
+2. Install dependencies:
 
-   ```
-   npm run build
-   ```
+```bash
+npm install
+```
 
-3. Start the local server:
+## Running the Application
 
-   ```
-   npm start
-   ```
+### Development Mode
 
-4. Open your browser and navigate to the local server URL.
+Start both the client and server in development mode:
 
-## Implementation Details
+```bash
+npm run dev
+```
 
-The project has been fully converted to TypeScript with proper type definitions. The main components include:
+Or run them separately:
 
-- `config.ts` - Configuration settings and pointer prototype
-- `webgl-utils.ts` - WebGL utility functions
-- `core-classes.ts` - Core Material and Program classes
-- `framebuffers.ts` - Framebuffer implementation
-- `shaders.ts` - All shaders used in the simulation
-- `simulation.ts` - Fluid dynamics simulation
-- `input.ts` - User input handling
-- `rendering.ts` - Rendering functions
-- `gui.ts` - GUI controls
-- `main.ts` - Main application initialization and loop
+```bash
+# Run just the client
+npm run dev:client
 
-## Credits
+# Run just the server
+npm run dev:server
+```
 
-This project is based on the original WebGL Fluid Simulation by Pavel Dobryakov, but converted to TypeScript for better code organization and type safety.
+This starts the server at http://localhost:3000 with the following endpoints:
+
+- `/`: The fluid simulation page
+- `/control`: The remote control page
+
+### Production Mode
+
+Build the application and start the server:
+
+```bash
+npm run build
+npm start
+```
+
+## Usage
+
+1. Open the simulation page in one browser window
+2. Open the control page in another browser window or device
+3. Use the control page to interact with the fluid simulation remotely
+
+### Control Interface
+
+- **Click and drag** on the control canvas to create fluid splats
+- Use the buttons at the bottom to trigger special effects:
+  - **Random Splats**: Create random splats across the simulation
+  - **Pattern Buttons**: Create specific flow patterns in the simulation
+
+## How It Works
+
+The application uses WebSockets to establish a real-time connection between the control page and the fluid simulation. User interactions on the control page are transmitted to the server, which then broadcasts them to all connected simulation pages.
+
+### Communication Protocol
+
+- Connection is established with role-based identification
+- Input events (mouse/touch) are normalized and transmitted
+- Special commands can be sent for predefined effects
+- Session IDs track different controllers and simulators
+
+## Technologies Used
+
+- WebGL for fluid simulation rendering
+- TypeScript for type-safe code (both client and server)
+- WebSockets for real-time communication
+- Express for serving the web application
+- Vite for development and building

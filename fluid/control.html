@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fluid Simulation - Remote Control</title>
+    <link rel="stylesheet" href="/control-styles.css" />
+  </head>
+  <body>
+    <div id="controller">
+      <div id="status-bar">
+        <h1>Fluid Simulation - Remote Control</h1>
+        <div class="status-indicator">
+          <div id="connection-dot" class="status-dot"></div>
+          <span id="connection-status">Disconnected</span>
+        </div>
+      </div>
+
+      <div id="canvas-container">
+        <canvas id="control-canvas"></canvas>
+        <div id="instructions">
+          Click and drag on this area to control the fluid simulation remotely
+        </div>
+      </div>
+
+      <div id="controls">
+        <button id="random-splats" class="button success">Random Splats</button>
+        <button id="pattern-right" class="button">Pattern Right</button>
+        <button id="pattern-left" class="button">Pattern Left</button>
+        <button id="pattern-up" class="button">Pattern Up</button>
+        <button id="pattern-down" class="button">Pattern Down</button>
+        <button id="pattern-corners" class="button">Pattern Corners</button>
+      </div>
+    </div>
+
+    <script type="module" src="./ts/control.ts"></script>
+  </body>
+</html>

@@ -8,18 +8,19 @@ export default defineConfig({
   root: './',
   publicDir: 'static',
   build: {
-    outDir: 'dist',
+    outDir: 'dist/public',
     assetsDir: 'assets',
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html')
+        main: path.resolve(__dirname, 'index.html'),
+        control: path.resolve(__dirname, 'control.html')
       }
     }
   },
   server: {
-    port: 3000,
+    port: 3001,
     open: true
   },
   resolve: {

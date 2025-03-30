@@ -1,6 +1,6 @@
 'use strict'
 
-import { config, isMobile, splatStack } from './config'
+import { config, isMobile } from './config'
 import { FBO } from './framebuffers'
 
 // Declare the dat.GUI type
@@ -29,9 +29,10 @@ declare const dat: {
 
 // GUI setup with dat.GUI
 function startGUI(
+  createSplatsHorizontal: () => void,
+  createSplatsVertical: () => void,
   createSplatsRight: () => void,
   createSplatsLeft: () => void,
-  createSplatsSide: () => void,
   createSplatsUp: () => void,
   createSplatsDown: () => void,
   createCornerSplats: () => void,
@@ -72,81 +73,14 @@ function startGUI(
       }
     })
 
-  gui
-    .add(
-      {
-        fun: () => {
-          createSplatsRight()
-        }
-      },
-      'fun'
-    )
-    .name('Splats Right')
-
-  gui
-    .add(
-      {
-        fun: () => {
-          createSplatsLeft()
-        }
-      },
-      'fun'
-    )
-    .name('Splats Left')
-  gui
-    .add(
-      {
-        fun: () => {
-          createSplatsSide()
-        }
-      },
-      'fun'
-    )
-    .name('Splats Side')
-
-  gui
-    .add(
-      {
-        fun: () => {
-          createSplatsUp()
-        }
-      },
-      'fun'
-    )
-    .name('Splats Up')
-
-  gui
-    .add(
-      {
-        fun: () => {
-          createSplatsDown()
-        }
-      },
-      'fun'
-    )
-    .name('Splats Down')
-
-  gui
-    .add(
-      {
-        fun: () => {
-          createCornerSplats()
-        }
-      },
-      'fun'
-    )
-    .name('Corner Splats')
-
-  gui
-    .add(
-      {
-        fun: () => {
-          splatStack.push(parseInt(Math.random() * 20 + '') + 5)
-        }
-      },
-      'fun'
-    )
-    .name('Random splats')
+  let splatFolder = gui.addFolder('Splats')
+  makeFunGUI(splatFolder, createSplatsRight, 'Splats Right')
+  makeFunGUI(splatFolder, createSplatsLeft, 'Splats Left')
+  makeFunGUI(splatFolder, createSplatsVertical, 'Splats Vertical')
+  makeFunGUI(splatFolder, createSplatsHorizontal, 'Splats Horizontal')
+  makeFunGUI(splatFolder, createSplatsUp, 'Splats Up')
+  makeFunGUI(splatFolder, createSplatsDown, 'Splats Down')
+  makeFunGUI(splatFolder, createCornerSplats, 'Corner Splats')
 
   gui.add(config, 'MIRROR_MODE').name('Mirror Mode')
 
@@ -272,14 +206,27 @@ function downloadURI(filename: string, uri: string): void {
   document.body.removeChild(link)
 }
 
+function makeFunGUI(gui: any, fun: () => void, name: string) {
+  gui
+    .add(
+      {
+        fun: () => {
+          fun()
+        }
+      },
+      'fun'
+    )
+    .name(name)
+}
+
 export {
-  startGUI,
   captureScreenshot,
+  clamp01,
+  downloadURI,
   framebufferToTexture,
   normalizeTexture,
-  clamp01,
-  textureToCanvas,
-  downloadURI
+  startGUI,
+  textureToCanvas
 }
 
 // Export the interface type properly
