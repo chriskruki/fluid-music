@@ -265,7 +265,7 @@ function sendMessage(client: WebSocket, message: Message): void {
 console.log('Current directory:', __dirname)
 
 // Resolve the path to static files - if we're in dist folder, we need to serve from dist/public
-const staticFilesPath = path.resolve(__dirname, './public')
+const staticFilesPath = path.resolve(__dirname, './dist/public')
 console.log('Static files path:', staticFilesPath)
 
 // Serve static files from the dist/public directory

@@ -11,12 +11,13 @@ import {
   createSplatsRight,
   createSplatsUp,
   createSplatsVertical,
+  generateColor,
   multipleSplats,
   splatPointer
 } from './simulation'
 
 // Remote pointer instances (separate from local pointers)
-const remotePointers: Map<string, PointerPrototype> = new Map()
+export const remotePointers: Map<string, PointerPrototype> = new Map()
 
 // WebSocket connection
 let socket: WebSocket | null = null
@@ -98,6 +99,13 @@ function processRemoteInput(payload: any): void {
   if (!remotePointer) {
     remotePointer = new PointerPrototype()
     remotePointer.id = controllerId
+    // Generate a more vibrant color for remote pointers
+    const color = generateColor()
+    // Make remote colors more vibrant - multiply by 10x
+    color.r *= 10.0
+    color.g *= 10.0
+    color.b *= 10.0
+    remotePointer.color = color
     remotePointers.set(controllerId, remotePointer)
   }
 
@@ -113,10 +121,12 @@ function processRemoteInput(payload: any): void {
       remotePointer.deltaX = 0
       remotePointer.deltaY = 0
 
-      // Use provided color or generate one
-      if (payload.color) {
-        remotePointer.color = payload.color
-      }
+      // Generate a new color on each mousedown event, just like local pointers do
+      const color = generateColor()
+      color.r *= 10.0
+      color.g *= 10.0
+      color.b *= 10.0
+      remotePointer.color = color
       break
 
     case 'mousemove':
@@ -128,9 +138,11 @@ function processRemoteInput(payload: any): void {
       remotePointer.texcoordY = position.y
 
       // Calculate deltas (may need to adjust for aspect ratio)
-      remotePointer.deltaX = remotePointer.texcoordX - remotePointer.prevTexcoordX
-      remotePointer.deltaY = remotePointer.texcoordY - remotePointer.prevTexcoordY
-      remotePointer.moved = Math.abs(remotePointer.deltaX) > 0 || Math.abs(remotePointer.deltaY) > 0
+      remotePointer.deltaX = 0
+      remotePointer.deltaY = 0
+
+      // Still mark as moved so the splat gets rendered
+      remotePointer.moved = true
       break
 
     case 'mouseup':

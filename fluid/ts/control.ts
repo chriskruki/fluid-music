@@ -157,7 +157,7 @@ function sendMessage(message: any): void {
 function getNormalizedCoordinates(event: MouseEvent | Touch): { x: number; y: number } {
   const rect = canvas.getBoundingClientRect()
   const x = (event.clientX - rect.left) / rect.width
-  const y = (event.clientY - rect.top) / rect.height
+  const y = 1.0 - (event.clientY - rect.top) / rect.height
   return { x, y }
 }
 

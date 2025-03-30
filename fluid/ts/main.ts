@@ -68,7 +68,12 @@ import {
 import { setupEventListeners } from './input'
 
 import { startGUI } from './gui'
-import { initRemoteControl, processRemoteActions } from './remote'
+import {
+  applyRemotePointers,
+  initRemoteControl,
+  processRemoteActions,
+  remotePointers
+} from './remote'
 
 // Define the debug info interface for TypeScript
 interface DebugInfo {
@@ -323,6 +328,9 @@ function updateColors(dt: number): void {
   if (colorUpdateTimer >= 1) {
     colorUpdateTimer = wrap(colorUpdateTimer, 0, 1)
     pointers.forEach((p) => {
+      p.color = generateColor()
+    })
+    remotePointers.forEach((p) => {
       p.color = generateColor()
     })
   }
@@ -600,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle window focus/blur to prevent animation freezing
     window.addEventListener('focus', () => {
       if (window.debugInfo && config.SHOW_DEBUG) {
-        window.debugInfo.updateAnimationStatus('Resuming after focus')
+        window.debugInfo.updateAnimationStatus('Running')
       }
       lastUpdateTime = Date.now()
       if (!animationId) {
@@ -608,15 +616,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
 
-    window.addEventListener('blur', () => {
-      if (window.debugInfo && config.SHOW_DEBUG) {
-        window.debugInfo.updateAnimationStatus('Paused (window blur)')
-      }
-      if (animationId) {
-        window.cancelAnimationFrame(animationId)
-        animationId = 0
-      }
-    })
+    // Don't pause animation on blur - allow continuous running
+    // Animation will continue running even when tab is not active
   } else {
     if (window.debugInfo && config.SHOW_DEBUG) {
       window.debugInfo.updateWebGLStatus('Error: WebGL initialization failed')
