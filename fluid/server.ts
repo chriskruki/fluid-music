@@ -308,33 +308,32 @@ function sendMessage(client: WebSocket, message: Message): void {
 // Log current directory and resolved paths
 console.log('Current directory:', __dirname)
 
-// Resolve the path to static files - if we're in dist folder, we need to serve from dist/public
-const staticFilesPath = path.resolve(__dirname, './dist/public')
-console.log('Static files path:', staticFilesPath)
+// Resolve paths relative to the server's location
+const publicDir = path.join(__dirname, 'public')
+const staticDir = path.join(__dirname, 'static')
 
-// Resolve the path to the static directory
-const staticDirectoryPath = path.resolve(__dirname, '../static')
-console.log('Static directory path:', staticDirectoryPath)
+console.log('Public directory:', publicDir)
+console.log('Static directory:', staticDir)
 
-// Serve static files from the dist/public directory
-app.use(express.static(staticFilesPath))
+// Serve static files from the public directory
+app.use(express.static(publicDir))
 
 // Serve static files from the static directory
-app.use('/static', express.static(staticDirectoryPath))
+app.use('/static', express.static(staticDir))
 
 // Route to handle control page
 app.get('/control', (req, res) => {
-  res.sendFile(path.resolve(staticFilesPath, 'control.html'))
+  res.sendFile(path.join(publicDir, 'control.html'))
 })
 
 // Route to handle beat detector page
 app.get('/beat-detector', (req, res) => {
-  res.sendFile(path.resolve(staticFilesPath, 'beat-detector.html'))
+  res.sendFile(path.join(publicDir, 'beat-detector.html'))
 })
 
 // Route to handle main page
 app.get('/', (req, res) => {
-  res.sendFile(path.resolve(staticFilesPath, 'index.html'))
+  res.sendFile(path.join(publicDir, 'index.html'))
 })
 
 // Start the server

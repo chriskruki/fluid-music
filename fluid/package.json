@@ -5,7 +5,7 @@
   "scripts": {
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
-    "build": "npm run build:client && npm run build:server",
+    "build": "rimraf dist && npm run build:client && npm run build:server",
     "start": "cd dist && node server.js",
     "prod": "npm run build && npm run start",
     "dev:client": "vite build --watch",
