@@ -70,6 +70,7 @@ import { setupEventListeners } from './input'
 import { startGUI } from './gui'
 import {
   applyRemotePointers,
+  beatState,
   initRemoteControl,
   processRemoteActions,
   remotePointers
@@ -88,6 +89,8 @@ interface DebugInfo {
 declare global {
   interface Window {
     debugInfo?: DebugInfo
+    updateBeatStatus?: (isConnected: boolean, count: number) => void
+    showBeatPulse?: (intensity: number) => void
   }
 }
 
@@ -158,6 +161,7 @@ let ditheringTexture: TextureObject
 let lastUpdateTime = Date.now()
 let colorUpdateTimer = 0.0
 let animationId: number
+let lastBeatDetectorCount = 0
 
 // Helper functions
 function resizeCanvas(): boolean {
@@ -384,6 +388,9 @@ function update(): void {
     processRemoteActions(gl, splatProgram, velocity, dye, canvas, blit)
   }
 
+  // Update beat visualizer
+  updateBeatVisualizer()
+
   // Run simulation steps if not paused
   if (!config.PAUSED) {
     step(
@@ -429,6 +436,28 @@ function update(): void {
 
   // Ensure animation continues with proper binding to window
   animationId = window.requestAnimationFrame(update)
+}
+
+// Function to update beat visualizer UI
+function updateBeatVisualizer(): void {
+  // Update beat detector connection status if count changed
+  if (window.updateBeatStatus) {
+    const beatDetectorCount = (window as any).clients?.beatDetectors?.size || 0
+    if (beatDetectorCount !== lastBeatDetectorCount) {
+      window.updateBeatStatus(beatDetectorCount > 0, beatDetectorCount)
+      lastBeatDetectorCount = beatDetectorCount
+    }
+  }
+
+  // Check if a beat is active and show pulse if needed
+  if (beatState.active) {
+    // Only show pulse if it's a new beat (first frame)
+    if (Date.now() - beatState.lastBeatTime < 50) {
+      if (window.showBeatPulse) {
+        window.showBeatPulse(beatState.intensity)
+      }
+    }
+  }
 }
 
 // Initialization function

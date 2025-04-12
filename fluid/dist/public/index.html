@@ -4,15 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WebGL Fluid Simulation</title>
-    
+    <link rel="stylesheet" href="./css/simulator.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
-    <script type="module" crossorigin src="/assets/main-ccd944f7.js"></script>
+    <script type="module" crossorigin src="/assets/main-ba5c7c2e.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-3cfb730f.js">
-    <link rel="stylesheet" href="/assets/index-cab7511e.css">
   </head>
 
   <body>
     <canvas></canvas>
+    <div id="beat-indicator"></div>
+    <div id="beat-status">Beat Detector: Disconnected</div>
     <div id="debug-info">
       <h3>Debug Info</h3>
       <div id="webgl-status">WebGL: Initializing...</div>
@@ -48,6 +49,40 @@
         if (debugElement) {
           // Initially hidden until main.ts sets it based on config
           debugElement.style.display = 'none'
+        }
+
+        // Display beat status when beat detectors are connected
+        window.updateBeatStatus = function (isConnected, count) {
+          const beatStatus = document.getElementById('beat-status')
+          if (beatStatus) {
+            if (count > 0) {
+              beatStatus.textContent = `Beat Detector: Connected (${count})`
+              beatStatus.style.display = 'block'
+            } else {
+              beatStatus.textContent = 'Beat Detector: Disconnected'
+              beatStatus.style.display = 'none'
+            }
+          }
+        }
+
+        // Pulse the beat indicator
+        window.showBeatPulse = function (intensity) {
+          const beatIndicator = document.getElementById('beat-indicator')
+          if (beatIndicator) {
+            // Scale size based on intensity
+            const size = Math.min(100, 30 + intensity * 10)
+            beatIndicator.style.width = size + 'px'
+            beatIndicator.style.height = size + 'px'
+            // Set opacity based on intensity (capped at 1)
+            beatIndicator.style.opacity = Math.min(1, intensity / 2)
+
+            // Reset after animation
+            setTimeout(() => {
+              beatIndicator.style.opacity = 0
+              beatIndicator.style.width = '30px'
+              beatIndicator.style.height = '30px'
+            }, 300)
+          }
         }
       })
     </script>

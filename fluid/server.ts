@@ -1,8 +1,8 @@
 import express from 'express'
 import http from 'http'
-import { WebSocket, WebSocketServer } from 'ws'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import { WebSocket, WebSocketServer } from 'ws'
 
 // Create Express app
 const app = express()
@@ -15,17 +15,19 @@ const server = http.createServer(app)
 const wss = new WebSocketServer({ server, path: '/ws' })
 
 // Define client types
-type ClientRole = 'controller' | 'simulator'
+type ClientRole = 'controller' | 'simulator' | 'beat_detector'
 
 interface ClientMap {
   controllers: Map<string, WebSocket>
   simulators: Map<string, WebSocket>
+  beatDetectors: Map<string, WebSocket>
 }
 
 // Store connected clients
 const clients: ClientMap = {
   controllers: new Map(),
-  simulators: new Map()
+  simulators: new Map(),
+  beatDetectors: new Map()
 }
 
 // Message interfaces
@@ -50,6 +52,7 @@ interface ConnectAckMessage extends BaseMessage {
     connectedClients: {
       controllers: number
       simulators: number
+      beatDetectors: number
     }
   }
 }
@@ -95,6 +98,15 @@ interface ClientCountsMessage extends BaseMessage {
   payload: {
     controllers: number
     simulators: number
+    beatDetectors: number
+  }
+}
+
+interface BeatMessage extends BaseMessage {
+  type: 'beat'
+  payload: {
+    intensity: number
+    beatDetectorId?: string
   }
 }
 
@@ -105,6 +117,7 @@ type Message =
   | RemoteInputMessage
   | CommandMessage
   | ClientCountsMessage
+  | BeatMessage
 
 // Handle WebSocket connections
 wss.on('connection', (ws: WebSocket) => {
@@ -134,6 +147,10 @@ wss.on('connection', (ws: WebSocket) => {
           handleCommand(ws, message as CommandMessage, sessionId)
           break
 
+        case 'beat':
+          handleBeat(ws, message as BeatMessage, sessionId)
+          break
+
         default:
           console.warn(`Unknown message type: ${message.type}`)
       }
@@ -151,6 +168,8 @@ wss.on('connection', (ws: WebSocket) => {
       clients.controllers.delete(sessionId)
     } else if (clientRole === 'simulator') {
       clients.simulators.delete(sessionId)
+    } else if (clientRole === 'beat_detector') {
+      clients.beatDetectors.delete(sessionId)
     }
 
     // Broadcast updated counts
@@ -169,6 +188,9 @@ function handleConnect(ws: WebSocket, message: ConnectMessage, sessionId: string
   } else if (role === 'simulator') {
     clients.simulators.set(sessionId, ws)
     console.log(`Simulator connected: ${sessionId}`)
+  } else if (role === 'beat_detector') {
+    clients.beatDetectors.set(sessionId, ws)
+    console.log(`Beat detector connected: ${sessionId}`)
   }
 
   // Send acknowledgment
@@ -179,7 +201,8 @@ function handleConnect(ws: WebSocket, message: ConnectMessage, sessionId: string
       sessionId,
       connectedClients: {
         controllers: clients.controllers.size,
-        simulators: clients.simulators.size
+        simulators: clients.simulators.size,
+        beatDetectors: clients.beatDetectors.size
       }
     },
     timestamp: Date.now()
@@ -221,6 +244,22 @@ function handleCommand(ws: WebSocket, message: CommandMessage, sessionId: string
   broadcastToSimulators(remoteMessage)
 }
 
+// Handle beat events from beat detectors
+function handleBeat(ws: WebSocket, message: BeatMessage, sessionId: string): void {
+  // Add the beat detector ID and timestamp to the message
+  const beatMessage: BeatMessage = {
+    type: 'beat',
+    payload: {
+      ...message.payload,
+      beatDetectorId: sessionId
+    },
+    timestamp: Date.now()
+  }
+
+  // Broadcast to all simulators
+  broadcastToSimulators(beatMessage)
+}
+
 // Broadcast message to all simulator clients
 function broadcastToSimulators(message: Message): void {
   clients.simulators.forEach((client) => {
@@ -236,13 +275,18 @@ function broadcastClientCounts(): void {
     type: 'client_counts',
     payload: {
       controllers: clients.controllers.size,
-      simulators: clients.simulators.size
+      simulators: clients.simulators.size,
+      beatDetectors: clients.beatDetectors.size
     },
     timestamp: Date.now()
   }
 
   // Send to all clients
-  ;[...clients.controllers.values(), ...clients.simulators.values()].forEach((client) => {
+  ;[
+    ...clients.controllers.values(),
+    ...clients.simulators.values(),
+    ...clients.beatDetectors.values()
+  ].forEach((client) => {
     if (isSocketOpen(client)) {
       sendMessage(client, countMessage)
     }
@@ -268,12 +312,24 @@ console.log('Current directory:', __dirname)
 const staticFilesPath = path.resolve(__dirname, './dist/public')
 console.log('Static files path:', staticFilesPath)
 
+// Resolve the path to the static directory
+const staticDirectoryPath = path.resolve(__dirname, '../static')
+console.log('Static directory path:', staticDirectoryPath)
+
 // Serve static files from the dist/public directory
 app.use(express.static(staticFilesPath))
+
+// Serve static files from the static directory
+app.use('/static', express.static(staticDirectoryPath))
 
 // Route to handle control page
 app.get('/control', (req, res) => {
   res.sendFile(path.resolve(staticFilesPath, 'control.html'))
+})
+
+// Route to handle beat detector page
+app.get('/beat-detector', (req, res) => {
+  res.sendFile(path.resolve(staticFilesPath, 'beat-detector.html'))
 })
 
 // Route to handle main page
@@ -283,5 +339,7 @@ app.get('/', (req, res) => {
 
 // Start the server
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`)
+  console.log(`Simulator - http://localhost:${PORT}`)
+  console.log(`Controller - http://localhost:${PORT}/control`)
+  console.log(`Beat Detector - http://localhost:${PORT}/beat-detector`)
 })

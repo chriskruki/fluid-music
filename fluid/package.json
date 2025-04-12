@@ -22,7 +22,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/kissfft-js": "^0.1.3",
     "express": "^4.18.2",
+    "kissfft-js": "^0.1.8",
+    "naudiodon2": "^2.4.0",
     "uuid": "^9.0.0",
     "ws": "^8.13.0"
   },

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fluid Music Beat Detector</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/beat-detector.css" />
+  </head>
+  <body class="bg-gray-900 text-gray-100">
+    <div class="min-h-screen p-6">
+      <h1 class="text-2xl font-bold text-center text-blue-400 mb-6">Fluid Music Beat Detector</h1>
+
+      <div
+        id="connection-status"
+        class="fixed top-4 left-4 p-2 rounded text-white bg-red-600 text-sm"
+      >
+        Disconnected
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Settings Panel -->
+        <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+          <h2 class="text-xl font-semibold mb-4 text-blue-300">Settings</h2>
+
+          <div class="mb-6">
+            <label class="block mb-3 tooltip">
+              <div class="flex justify-between mb-1">
+                <span>Min Frequency (Hz):</span>
+                <span id="min-freq-value" class="text-blue-400">60</span>
+              </div>
+              <input
+                type="range"
+                id="min-freq"
+                min="0"
+                max="100"
+                value="60"
+                step="1"
+                class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
+              <span class="tooltip-text">
+                Lower frequency bound for beat detection. Bass frequencies (60-150Hz) typically
+                contain the most noticeable beats.
+              </span>
+            </label>
+
+            <label class="block mb-3 tooltip">
+              <div class="flex justify-between mb-1">
+                <span>Max Frequency (Hz):</span>
+                <span id="max-freq-value" class="text-red-400">150</span>
+              </div>
+              <input
+                type="range"
+                id="max-freq"
+                min="0"
+                max="100"
+                value="150"
+                step="1"
+                class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
+              <span class="tooltip-text">
+                Upper frequency bound for beat detection. Setting this higher will include more
+                mid-range frequencies.
+              </span>
+            </label>
+
+            <label class="block mb-3 tooltip">
+              <div class="flex justify-between mb-1">
+                <span>Sensitivity:</span>
+                <span id="sensitivity-value" class="text-yellow-400">1.5</span>
+              </div>
+              <input
+                type="range"
+                id="sensitivity"
+                min="0.5"
+                max="5"
+                value="1.5"
+                step="0.1"
+                class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
+              <span class="tooltip-text">
+                Higher sensitivity makes beat detection more responsive but can cause false
+                positives. This controls how far above the average energy level a peak must be to
+                count as a beat. Higher values = more beats detected.
+              </span>
+            </label>
+          </div>
+
+          <div class="flex space-x-4">
+            <button
+              id="start-btn"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition"
+            >
+              Start Microphone
+            </button>
+            <button
+              id="stop-btn"
+              disabled
+              class="flex-1 bg-gray-600 text-gray-300 font-medium py-2 px-4 rounded cursor-not-allowed"
+            >
+              Stop
+            </button>
+          </div>
+        </div>
+
+        <!-- Visualization Panel -->
+        <div class="bg-gray-800 rounded-lg p-4 shadow-lg lg:col-span-2">
+          <h2 class="text-xl font-semibold mb-4 text-blue-300">Audio Visualization</h2>
+
+          <div id="visualization" class="relative h-60 bg-gray-900 rounded overflow-hidden mb-4">
+            <canvas id="canvas"></canvas>
+            <div id="beat-indicator" class="visualizer-beat"></div>
+            <div id="threshold-line" class="threshold-line"></div>
+            <div id="min-freq-cursor" class="frequency-cursor min-freq-cursor"></div>
+            <div id="max-freq-cursor" class="frequency-cursor max-freq-cursor"></div>
+            <div id="frequency-labels" class="frequency-labels"></div>
+          </div>
+
+          <div class="bg-gray-900 p-3 rounded">
+            <h3 class="text-md font-medium text-blue-300 mb-2">Beat Detection Explanation</h3>
+            <p class="text-sm text-gray-300 mb-2">
+              The beat detector analyzes audio in the selected frequency range (highlighted in
+              <span class="text-red-500">red</span>). The
+              <span class="text-cyan-400">cyan bar</span> shows the current energy level, and the
+              <span class="text-yellow-400">yellow dashed line</span>
+              shows the threshold for beat detection. When energy exceeds the threshold, a beat is
+              detected.
+            </p>
+            <p class="text-sm text-gray-300">
+              The threshold adapts based on recent audio history. Higher sensitivity lowers this
+              threshold, making beat detection more responsive but potentially causing false
+              positives.
+            </p>
+          </div>
+        </div>
+
+        <!-- Log Panel -->
+        <div class="bg-gray-800 rounded-lg p-4 shadow-lg lg:col-span-3">
+          <h2 class="text-xl font-semibold mb-2 text-blue-300">Log</h2>
+          <div
+            id="log"
+            class="h-32 overflow-y-auto font-mono text-xs bg-gray-900 p-2 rounded"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module" src="./ts/beat-detector-main.ts"></script>
+  </body>
+</html>

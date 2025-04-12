@@ -23,6 +23,21 @@ export const remotePointers: Map<string, PointerPrototype> = new Map()
 let socket: WebSocket | null = null
 let isConnected = false
 
+// Beat detection state
+interface BeatState {
+  lastBeatTime: number
+  intensity: number
+  active: boolean
+  cooldown: number
+}
+
+export const beatState: BeatState = {
+  lastBeatTime: 0,
+  intensity: 0,
+  active: false,
+  cooldown: 500 // ms
+}
+
 /**
  * Initialize WebSocket connection to server
  */
@@ -80,11 +95,43 @@ function handleSocketMessage(event: MessageEvent): void {
         processRemoteCommand(message.payload)
         break
 
+      case 'beat':
+        processBeatEvent(message.payload)
+        break
+
       default:
         console.warn(`Unknown message type: ${message.type}`)
     }
   } catch (error) {
     console.error('Error processing WebSocket message:', error)
+  }
+}
+
+/**
+ * Process beat events from beat detector
+ */
+function processBeatEvent(payload: any): void {
+  const { intensity } = payload
+
+  // Update beat state
+  beatState.lastBeatTime = Date.now()
+  beatState.intensity = intensity
+  beatState.active = true
+
+  console.log(`Beat detected with intensity: ${intensity.toFixed(2)}`)
+
+  // Queue beat visualization actions based on intensity
+  if (intensity > 2.5) {
+    // Strong beat - multiple effects
+    remoteActions.randomSplats = Math.floor(intensity * 2)
+    remoteActions.patternName = 'corners'
+  } else if (intensity > 1.5) {
+    // Medium beat - moderate effect
+    remoteActions.randomSplats = Math.floor(intensity)
+    remoteActions.patternName = intensity > 2.0 ? 'horizontal' : 'vertical'
+  } else {
+    // Light beat - minimal effect
+    remoteActions.randomSplats = 2
   }
 }
 
@@ -138,11 +185,9 @@ function processRemoteInput(payload: any): void {
       remotePointer.texcoordY = position.y
 
       // Calculate deltas (may need to adjust for aspect ratio)
-      remotePointer.deltaX = 0
-      remotePointer.deltaY = 0
-
-      // Still mark as moved so the splat gets rendered
-      remotePointer.moved = true
+      remotePointer.deltaX = remotePointer.texcoordX - remotePointer.prevTexcoordX
+      remotePointer.deltaY = remotePointer.texcoordY - remotePointer.prevTexcoordY
+      remotePointer.moved = Math.abs(remotePointer.deltaX) > 0 || Math.abs(remotePointer.deltaY) > 0
       break
 
     case 'mouseup':
@@ -244,6 +289,14 @@ export function processRemoteActions(
   if (remoteActions.patternName) {
     applyPattern(remoteActions.patternName, gl, splatProgram, velocity, dye, canvas, blit)
     remoteActions.patternName = null
+  }
+
+  // Update beat state
+  if (beatState.active) {
+    const now = Date.now()
+    if (now - beatState.lastBeatTime > beatState.cooldown) {
+      beatState.active = false
+    }
   }
 }
 

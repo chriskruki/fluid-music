@@ -15,7 +15,15 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
-        control: path.resolve(__dirname, 'control.html')
+        control: path.resolve(__dirname, 'control.html'),
+        beat: path.resolve(__dirname, 'beat-detector.html')
+      },
+      output: {
+        entryFileNames: (chunkInfo) => {
+          return chunkInfo.name.includes('beat-detector-processor')
+            ? 'assets/[name].js'
+            : 'assets/[name]-[hash].js'
+        }
       }
     }
   },

@@ -34,6 +34,6 @@
       "@/*": ["ts/*"]
     }
   },
-  "include": ["ts/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["ts/**/*.ts", "beat-detector.html"],
+  "exclude": ["node_modules", "dist"]
 }
