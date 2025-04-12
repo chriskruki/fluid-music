@@ -4,8 +4,6 @@ let ctx: CanvasRenderingContext2D | null
 let connectionDot: HTMLElement
 let connectionStatus: HTMLElement
 let instructions: HTMLElement
-let drawerToggle: HTMLElement
-let controlDrawer: HTMLElement
 
 // WebSocket connection
 let socket: WebSocket | null = null
@@ -21,11 +19,6 @@ function initElements(): void {
   connectionDot = document.getElementById('connection-dot') as HTMLElement
   connectionStatus = document.getElementById('connection-status') as HTMLElement
   instructions = document.getElementById('instructions') as HTMLElement
-  drawerToggle = document.getElementById('drawer-toggle') as HTMLElement
-  controlDrawer = document.getElementById('control-drawer') as HTMLElement
-
-  // Initialize drawer toggle
-  drawerToggle.addEventListener('click', toggleDrawer)
 
   // Initialize pattern buttons
   document.getElementById('random-splats')?.addEventListener('click', sendRandomSplats)
@@ -37,22 +30,11 @@ function initElements(): void {
     .getElementById('pattern-corners')
     ?.addEventListener('click', () => sendPattern('corners'))
 
-  // Setup canvas events
+  // Setup canvas event listeners
   setupCanvasEvents()
 
   // Handle window resize
   window.addEventListener('resize', resizeCanvas)
-
-  // Initial canvas resize
-  resizeCanvas()
-}
-
-/**
- * Toggle the control drawer
- */
-function toggleDrawer(): void {
-  controlDrawer.classList.toggle('open')
-  drawerToggle.classList.toggle('open')
 }
 
 /**
@@ -61,8 +43,11 @@ function toggleDrawer(): void {
 function resizeCanvas(): void {
   if (!canvas) return
 
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
+  const container = document.getElementById('canvas-container')
+  if (!container) return
+
+  canvas.width = container.clientWidth
+  canvas.height = container.clientHeight
 }
 
 /**

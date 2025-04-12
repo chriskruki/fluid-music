@@ -2,7 +2,8 @@
   touch-action: none;
   width: 100%;
   height: 100%;
-  background-color: rgba(17, 24, 39, 1);
+  background-color: rgba(17, 24, 39, 0.7);
+  border-radius: 0.5rem;
 }
 
 .status-dot {
@@ -16,36 +17,4 @@
 
 .status-dot.connected {
   background-color: #10b981;
-}
-
-/* Drawer animations */
-#control-drawer {
-  z-index: 40;
-}
-
-#control-drawer.open {
-  transform: translateX(0);
-}
-
-#drawer-toggle {
-  transition: transform 0.3s ease;
-}
-
-#drawer-toggle.open {
-  transform: translateX(-320px) rotate(180deg);
-}
-
-/* Ensure canvas takes full screen */
-#canvas-container {
-  touch-action: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Hide instructions after first interaction */
-#instructions.hidden {
-  opacity: 0;
-  transition: opacity 0.3s ease;
 }
