@@ -2,14 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Fluid Simulation - Remote Control</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script type="module" crossorigin src="/assets/control-db41845c.js"></script>
+    <script type="module" crossorigin src="/assets/control-19a56830.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-3cfb730f.js">
-    <link rel="stylesheet" href="/assets/control-53dd6fc7.css">
+    <link rel="stylesheet" href="/assets/control-6d6bbc07.css">
   </head>
   <body class="bg-gray-900 text-gray-100 overflow-hidden">
     <div id="controller" class="h-screen w-screen relative">
@@ -27,8 +30,9 @@
       <!-- Toggle button for drawer -->
       <button
         id="drawer-toggle"
-        class="absolute top-4 right-4 z-50 bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-full shadow-lg transition-transform duration-300"
+        class="absolute top-4 right-4 z-50 bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-full shadow-lg transition-transform duration-300 touch-manipulation"
         aria-label="Toggle Controls"
+        type="button"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -49,9 +53,32 @@
       <!-- Control drawer -->
       <div
         id="control-drawer"
-        class="fixed top-0 right-0 h-full w-80 bg-gray-800 transform translate-x-full transition-transform duration-300 shadow-lg overflow-y-auto"
+        class="fixed top-0 right-0 h-full w-80 bg-gray-800 transform translate-x-full transition-transform duration-300 shadow-lg overflow-y-auto z-40"
+        aria-hidden="true"
       >
         <div class="p-6">
+          <!-- Close button for mobile -->
+          <button
+            class="lg:hidden absolute top-4 right-4 text-gray-400 hover:text-white"
+            aria-label="Close drawer"
+            onclick="document.getElementById('drawer-toggle').click()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
           <!-- Status bar -->
           <div id="status-bar" class="flex justify-between items-center mb-6">
             <h1 class="text-xl font-bold text-blue-400">Control Panel</h1>

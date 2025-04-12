@@ -4,6 +4,8 @@ let ctx: CanvasRenderingContext2D | null
 let connectionDot: HTMLElement
 let connectionStatus: HTMLElement
 let instructions: HTMLElement
+let drawerToggle: HTMLElement
+let controlDrawer: HTMLElement
 
 // WebSocket connection
 let socket: WebSocket | null = null
@@ -19,6 +21,8 @@ function initElements(): void {
   connectionDot = document.getElementById('connection-dot') as HTMLElement
   connectionStatus = document.getElementById('connection-status') as HTMLElement
   instructions = document.getElementById('instructions') as HTMLElement
+  drawerToggle = document.getElementById('drawer-toggle') as HTMLElement
+  controlDrawer = document.getElementById('control-drawer') as HTMLElement
 
   // Initialize pattern buttons
   document.getElementById('random-splats')?.addEventListener('click', sendRandomSplats)
@@ -30,6 +34,13 @@ function initElements(): void {
     .getElementById('pattern-corners')
     ?.addEventListener('click', () => sendPattern('corners'))
 
+  // Setup drawer toggle
+  drawerToggle.addEventListener('click', toggleDrawer)
+  drawerToggle.addEventListener('touchend', (e) => {
+    e.preventDefault()
+    toggleDrawer()
+  })
+
   // Setup canvas event listeners
   setupCanvasEvents()
 
@@ -38,16 +49,25 @@ function initElements(): void {
 }
 
 /**
+ * Toggle the control drawer visibility
+ */
+function toggleDrawer(): void {
+  // Toggle open class on drawer
+  controlDrawer.classList.toggle('open')
+  drawerToggle.classList.toggle('open')
+
+  // Stop event propagation
+  event?.stopPropagation()
+}
+
+/**
  * Resize canvas to fill container
  */
 function resizeCanvas(): void {
   if (!canvas) return
 
-  const container = document.getElementById('canvas-container')
-  if (!container) return
-
-  canvas.width = container.clientWidth
-  canvas.height = container.clientHeight
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
 }
 
 /**
