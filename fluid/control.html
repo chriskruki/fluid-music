@@ -6,83 +6,117 @@
     <title>Fluid Simulation - Remote Control</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="./css/control.css" />
+    <link rel="stylesheet" href="./static/css/control.css" />
   </head>
-  <body class="bg-gray-900 text-gray-100">
-    <div id="controller" class="min-h-screen p-6">
-      <div id="status-bar" class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-blue-400">Fluid Simulation - Remote Control</h1>
-        <div class="flex items-center text-sm bg-gray-800 px-3 py-2 rounded-lg">
-          <div id="connection-dot" class="status-dot"></div>
-          <span id="connection-status">Disconnected</span>
-        </div>
-      </div>
-
-      <div id="canvas-container" class="relative h-64 mb-6">
+  <body class="bg-gray-900 text-gray-100 overflow-hidden">
+    <div id="controller" class="h-screen w-screen relative">
+      <!-- Full-screen canvas container -->
+      <div id="canvas-container" class="absolute inset-0">
         <canvas id="control-canvas"></canvas>
         <div
           id="instructions"
           class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-gray-400 font-medium pointer-events-none"
         >
-          Click and drag on this area to control the fluid simulation remotely
+          Click and drag anywhere to control the fluid simulation remotely
         </div>
       </div>
 
-      <div id="controls" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <button
-          id="random-splats"
-          class="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-medium py-3 px-4 rounded-lg transition"
+      <!-- Toggle button for drawer -->
+      <button
+        id="drawer-toggle"
+        class="absolute top-4 right-4 z-50 bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-full shadow-lg transition-transform duration-300"
+        aria-label="Toggle Controls"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          Random Splats
-        </button>
-        <button
-          id="pattern-right"
-          class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
-        >
-          Pattern Right
-        </button>
-        <button
-          id="pattern-left"
-          class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
-        >
-          Pattern Left
-        </button>
-        <button
-          id="pattern-up"
-          class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
-        >
-          Pattern Up
-        </button>
-        <button
-          id="pattern-down"
-          class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
-        >
-          Pattern Down
-        </button>
-        <button
-          id="pattern-corners"
-          class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
-        >
-          Pattern Corners
-        </button>
-      </div>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16m-7 6h7"
+          />
+        </svg>
+      </button>
 
-      <div class="mt-8 bg-gray-800 p-4 rounded-lg shadow">
-        <h2 class="text-xl font-semibold mb-2 text-blue-300">Using the Controller</h2>
-        <ul class="list-disc pl-5 text-gray-300 space-y-2">
-          <li>Use the canvas area to draw fluid movements by clicking and dragging</li>
-          <li>Click the "Random Splats" button to generate random splats in the simulation</li>
-          <li>Use the pattern buttons to create predefined fluid movements</li>
-          <li>
-            Open the <a href="/" class="text-blue-400 hover:underline">main simulator</a> to see
-            your controls in action
-          </li>
-          <li>
-            Try the
-            <a href="/beat-detector" class="text-blue-400 hover:underline">beat detector</a> to make
-            the fluid react to music
-          </li>
-        </ul>
+      <!-- Control drawer -->
+      <div
+        id="control-drawer"
+        class="fixed top-0 right-0 h-full w-80 bg-gray-800 transform translate-x-full transition-transform duration-300 shadow-lg overflow-y-auto"
+      >
+        <div class="p-6">
+          <!-- Status bar -->
+          <div id="status-bar" class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold text-blue-400">Control Panel</h1>
+            <div class="flex items-center text-sm bg-gray-700 px-3 py-2 rounded-lg">
+              <div id="connection-dot" class="status-dot"></div>
+              <span id="connection-status">Disconnected</span>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div id="controls" class="grid grid-cols-1 gap-4 mb-6">
+            <button
+              id="random-splats"
+              class="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-medium py-3 px-4 rounded-lg transition"
+            >
+              Random Splats
+            </button>
+            <button
+              id="pattern-right"
+              class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
+            >
+              Pattern Right
+            </button>
+            <button
+              id="pattern-left"
+              class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
+            >
+              Pattern Left
+            </button>
+            <button
+              id="pattern-up"
+              class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
+            >
+              Pattern Up
+            </button>
+            <button
+              id="pattern-down"
+              class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
+            >
+              Pattern Down
+            </button>
+            <button
+              id="pattern-corners"
+              class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition"
+            >
+              Pattern Corners
+            </button>
+          </div>
+
+          <!-- Instructions -->
+          <div class="bg-gray-700 p-4 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-2 text-blue-300">Using the Controller</h2>
+            <ul class="list-disc pl-5 text-gray-300 space-y-2 text-sm">
+              <li>Click and drag anywhere on the screen to draw fluid movements</li>
+              <li>Use the "Random Splats" button to generate random effects</li>
+              <li>Try the pattern buttons for predefined movements</li>
+              <li>
+                Open the <a href="/" class="text-blue-400 hover:underline">main simulator</a> to see
+                your controls in action
+              </li>
+              <li>
+                Try the
+                <a href="/beat-detector" class="text-blue-400 hover:underline">beat detector</a> to
+                make the fluid react to music
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
 
