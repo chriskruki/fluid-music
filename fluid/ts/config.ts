@@ -41,6 +41,7 @@ interface FluidConfig {
   SUNRAYS_RESOLUTION: number
   SUNRAYS_WEIGHT: number
   MIRROR_MODE: boolean
+  MIRROR_SEGMENTS: number
   SPLAT_SPEED: number
   SPLAT_COUNT: number
   SHOW_DEBUG: boolean
@@ -75,6 +76,7 @@ const config: FluidConfig = {
   SUNRAYS_RESOLUTION: 196,
   SUNRAYS_WEIGHT: 0.5,
   MIRROR_MODE: false,
+  MIRROR_SEGMENTS: 2,
   SPLAT_SPEED: 1000,
   SPLAT_COUNT: 5,
   SHOW_DEBUG: false,

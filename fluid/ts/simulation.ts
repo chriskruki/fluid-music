@@ -114,7 +114,7 @@ function splatPointer(
 ): void {
   let dx = pointer.deltaX * config.SPLAT_FORCE
   let dy = pointer.deltaY * config.SPLAT_FORCE
-  splat(
+  splatWithMirror(
     gl,
     pointer.texcoordX,
     pointer.texcoordY,
@@ -147,10 +147,13 @@ function multipleSplats(
     const y = Math.random()
     const dx = 1000 * (Math.random() - 0.5)
     const dy = 1000 * (Math.random() - 0.5)
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 }
 
+/**
+ * Create a single splat at the specified location
+ */
 function splat(
   gl: WebGLRenderingContext,
   x: number,
@@ -177,6 +180,81 @@ function splat(
   gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b)
   blit(dye.write)
   dye.swap()
+}
+
+/**
+ * Create splat with mirror mode support - duplicates splats based on mirror segments
+ */
+function splatWithMirror(
+  gl: WebGLRenderingContext,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  color: Color,
+  splatProgram: Program,
+  velocity: DoubleFBO,
+  dye: DoubleFBO,
+  canvas: HTMLCanvasElement,
+  blit: (destination: FBO) => void
+): void {
+  // Always create the original splat
+  splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+
+  // If mirror mode is disabled or segments is 1, we're done
+  if (!config.MIRROR_MODE || config.MIRROR_SEGMENTS <= 1) {
+    return
+  }
+
+  const segments = config.MIRROR_SEGMENTS
+
+  // For 2 segments: horizontal mirror (left to right)
+  if (segments >= 2) {
+    const mirroredX = 1.0 - x
+    const mirroredDx = -dx
+    splat(gl, mirroredX, y, mirroredDx, dy, color, splatProgram, velocity, dye, canvas, blit)
+  }
+
+  // For 4 segments: rotational symmetry (90° increments) - mandala effect
+  if (segments >= 4) {
+    // Rotate 90° clockwise: (x, y) -> (1-y, x), velocity rotates
+    const rot90X = 1.0 - y
+    const rot90Y = x
+    const rot90Dx = -dy
+    const rot90Dy = dx
+    splat(gl, rot90X, rot90Y, rot90Dx, rot90Dy, color, splatProgram, velocity, dye, canvas, blit)
+
+    // Rotate 180°: (x, y) -> (1-x, 1-y), velocity reverses
+    const rot180X = 1.0 - x
+    const rot180Y = 1.0 - y
+    const rot180Dx = -dx
+    const rot180Dy = -dy
+    splat(gl, rot180X, rot180Y, rot180Dx, rot180Dy, color, splatProgram, velocity, dye, canvas, blit)
+
+    // Rotate 270° clockwise: (x, y) -> (y, 1-x), velocity rotates
+    const rot270X = y
+    const rot270Y = 1.0 - x
+    const rot270Dx = dy
+    const rot270Dy = -dx
+    splat(gl, rot270X, rot270Y, rot270Dx, rot270Dy, color, splatProgram, velocity, dye, canvas, blit)
+  }
+
+  // For 8 segments: add diagonal mirrors (45° increments)
+  if (segments >= 8) {
+    // Mirror across diagonal from top-left to bottom-right: (x, y) -> (y, x)
+    const diag1X = y
+    const diag1Y = x
+    const diag1Dx = dy
+    const diag1Dy = dx
+    splat(gl, diag1X, diag1Y, diag1Dx, diag1Dy, color, splatProgram, velocity, dye, canvas, blit)
+
+    // Mirror across diagonal from top-right to bottom-left: (x, y) -> (1-y, 1-x)
+    const diag2X = 1.0 - y
+    const diag2Y = 1.0 - x
+    const diag2Dx = -dy
+    const diag2Dy = -dx
+    splat(gl, diag2X, diag2Y, diag2Dx, diag2Dy, color, splatProgram, velocity, dye, canvas, blit)
+  }
 }
 
 function correctRadius(radius: number, canvas: HTMLCanvasElement): number {
@@ -208,7 +286,7 @@ function createSplatsRight(
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 }
 
@@ -234,7 +312,7 @@ function createSplatsLeft(
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 }
 
@@ -260,7 +338,7 @@ function createSplatsUp(
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 }
 
@@ -285,7 +363,7 @@ function createSplatsHorizontal(
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 
   for (let i = 0; i < splatCount; i++) {
@@ -297,7 +375,7 @@ function createSplatsHorizontal(
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 }
 
@@ -322,7 +400,7 @@ function createSplatsVertical(
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 
   for (let i = 0; i < splatCount; i++) {
@@ -334,7 +412,7 @@ function createSplatsVertical(
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 }
 
@@ -360,7 +438,7 @@ function createSplatsDown(
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
-    splat(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+    splatWithMirror(gl, x, y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
   }
 }
 
@@ -399,7 +477,7 @@ function createCornerSplats(
       color.r *= 10.0
       color.g *= 10.0
       color.b *= 10.0
-      splat(gl, corner.x, corner.y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
+      splatWithMirror(gl, corner.x, corner.y, dx, dy, color, splatProgram, velocity, dye, canvas, blit)
     }
   })
 }

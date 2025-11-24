@@ -106,6 +106,7 @@ function startGUI(
   makeFunGUI(splatFolder, createCornerSplats, 'Corner Splats')
 
   gui.add(config, 'MIRROR_MODE').name('Mirror Mode')
+  gui.add(config, 'MIRROR_SEGMENTS', 1, 8).name('Mirror Segments').step(1)
 
   let bloomFolder = gui.addFolder('Bloom')
   bloomFolder.add(config, 'BLOOM').name('enabled').onFinishChange(updateKeywords)
