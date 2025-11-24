@@ -9,6 +9,7 @@ interface WebSocketState {
   isConnected: boolean
   connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error'
   clientId: string | null
+  controllerColor: { r: number; g: number; b: number } | null
   clientCounts: {
     controllers: number
     simulators: number
@@ -20,13 +21,60 @@ interface WebSocketState {
   sendMessage: (message: Message) => void
   setConnectionStatus: (status: WebSocketState['connectionStatus']) => void
   setClientId: (id: string | null) => void
+  setControllerColor: (color: { r: number; g: number; b: number } | null) => void
   setClientCounts: (counts: Partial<WebSocketState['clientCounts']>) => void
+}
+
+// Generate a unique color for each controller based on client ID
+function generateControllerColor(clientId: string | null): { r: number; g: number; b: number } {
+  if (!clientId) {
+    // Fallback: random color
+    const hue = Math.random()
+    return HSVtoRGB(hue, 1.0, 1.0)
+  }
+  
+  // Use clientId hash to generate consistent color
+  let hash = 0
+  for (let i = 0; i < clientId.length; i++) {
+    hash = clientId.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  const hue = (hash % 360) / 360
+  return HSVtoRGB(hue, 0.8, 1.0)
+}
+
+function HSVtoRGB(h: number, s: number, v: number): { r: number; g: number; b: number } {
+  const c = v * s
+  const x = c * (1 - Math.abs(((h * 6) % 2) - 1))
+  const m = v - c
+  
+  let r = 0, g = 0, b = 0
+  
+  if (h * 6 < 1) {
+    r = c; g = x; b = 0
+  } else if (h * 6 < 2) {
+    r = x; g = c; b = 0
+  } else if (h * 6 < 3) {
+    r = 0; g = c; b = x
+  } else if (h * 6 < 4) {
+    r = 0; g = x; b = c
+  } else if (h * 6 < 5) {
+    r = x; g = 0; b = c
+  } else {
+    r = c; g = 0; b = x
+  }
+  
+  return {
+    r: (r + m) * 0.15, // Scale down for fluid simulation
+    g: (g + m) * 0.15,
+    b: (b + m) * 0.15
+  }
 }
 
 export const useWebSocket = create<WebSocketState>((set, get) => ({
   isConnected: false,
   connectionStatus: 'disconnected',
   clientId: null,
+  controllerColor: null,
   clientCounts: {
     controllers: 0,
     simulators: 0,
@@ -63,8 +111,10 @@ export const useWebSocket = create<WebSocketState>((set, get) => ({
           
           if (message.type === 'connect_ack') {
             const payload = message.payload as { sessionId: string; connectedClients: { controllers: number; simulators: number; beatDetectors: number } }
+            const color = generateControllerColor(payload.sessionId)
             set({
               clientId: payload.sessionId,
+              controllerColor: color,
               clientCounts: payload.connectedClients
             })
           }
@@ -112,7 +162,11 @@ export const useWebSocket = create<WebSocketState>((set, get) => ({
   },
   
   setConnectionStatus: (status) => set({ connectionStatus: status }),
-  setClientId: (id) => set({ clientId: id }),
+  setClientId: (id) => {
+    const color = generateControllerColor(id)
+    set({ clientId: id, controllerColor: color })
+  },
+  setControllerColor: (color) => set({ controllerColor: color }),
   setClientCounts: (counts) => set((state) => ({
     clientCounts: { ...state.clientCounts, ...counts }
   }))

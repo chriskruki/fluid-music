@@ -345,7 +345,7 @@ export class FluidSimulation {
   /**
    * Handle pointer input (mouse/touch)
    */
-  handlePointerDown(id: number, x: number, y: number): void {
+  handlePointerDown(id: number, x: number, y: number, color?: { r: number; g: number; b: number }, colorful?: boolean): void {
     let pointer = this.pointers.find(p => p.id === id)
     if (!pointer) {
       pointer = new Pointer()
@@ -361,7 +361,44 @@ export class FluidSimulation {
     pointer.prevTexcoordY = y
     pointer.deltaX = 0
     pointer.deltaY = 0
-    pointer.color = generateColor(this.config)
+    
+    // Set colorful mode if provided
+    if (colorful !== undefined) {
+      pointer.colorful = colorful
+    }
+    
+    // Use provided color or generate one (if colorful mode, generate rainbow color)
+    if (color) {
+      pointer.color = color
+    } else if (pointer.colorful) {
+      pointer.color = generateColor({ ...this.config, RAINBOW_MODE: true, COLORFUL: true })
+    } else {
+      pointer.color = generateColor(this.config)
+    }
+  }
+  
+  /**
+   * Set pointer color (for remote controllers)
+   */
+  setPointerColor(id: number, color: { r: number; g: number; b: number }): void {
+    const pointer = this.pointers.find(p => p.id === id)
+    if (pointer) {
+      pointer.color = color
+    }
+  }
+  
+  /**
+   * Set pointer colorful mode (for remote controllers)
+   */
+  setPointerColorful(id: number, colorful: boolean): void {
+    const pointer = this.pointers.find(p => p.id === id)
+    if (pointer) {
+      pointer.colorful = colorful
+      // If enabling colorful mode, generate a new rainbow color
+      if (colorful) {
+        pointer.color = generateColor({ ...this.config, RAINBOW_MODE: true, COLORFUL: true })
+      }
+    }
   }
   
   handlePointerMove(id: number, x: number, y: number): void {
@@ -743,14 +780,16 @@ export class FluidSimulation {
   }
   
   private updateColors(dt: number): void {
-    // Only update colors if colorful mode is enabled AND rainbow mode is enabled
-    if (!this.config.COLORFUL || !this.config.RAINBOW_MODE) return
+    // Only update colors for pointers that have colorful mode enabled
+    const colorfulPointers = this.pointers.filter(p => p.colorful)
+    if (colorfulPointers.length === 0) return
     
     this.colorUpdateTimer += dt * this.config.COLOR_UPDATE_SPEED
     if (this.colorUpdateTimer >= 1) {
       this.colorUpdateTimer = wrap(this.colorUpdateTimer, 0, 1)
-      this.pointers.forEach((p) => {
-        p.color = generateColor(this.config)
+      colorfulPointers.forEach((p) => {
+        // Generate rainbow color for this pointer
+        p.color = generateColor({ ...this.config, RAINBOW_MODE: true, COLORFUL: true })
       })
     }
   }
@@ -795,5 +834,6 @@ class Pointer {
   down: boolean = false
   moved: boolean = false
   color: { r: number; g: number; b: number } = { r: 30, g: 0, b: 300 }
+  colorful: boolean = false // Per-pointer colorful/rainbow mode
 }
 

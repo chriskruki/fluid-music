@@ -39,6 +39,14 @@ export interface InputMessage extends BaseMessage {
   }
 }
 
+export interface ClientSettingsMessage extends BaseMessage {
+  type: 'client_settings'
+  payload: {
+    color?: { r: number; g: number; b: number }
+    colorful?: boolean
+  }
+}
+
 export interface CommandMessage extends BaseMessage {
   type: 'command'
   payload: {
@@ -56,5 +64,17 @@ export interface BeatMessage extends BaseMessage {
   }
 }
 
-export type Message = ConnectMessage | ConnectAckMessage | InputMessage | CommandMessage | BeatMessage
+export interface RemoteInputMessage extends BaseMessage {
+  type: 'remote_input'
+  payload: {
+    eventType: 'mousedown' | 'mousemove' | 'mouseup' | 'touchstart' | 'touchmove' | 'touchend'
+    position: { x: number; y: number }
+    pointerId?: number
+    controllerId?: string
+    color?: { r: number; g: number; b: number }
+    colorful?: boolean
+  }
+}
+
+export type Message = ConnectMessage | ConnectAckMessage | InputMessage | CommandMessage | BeatMessage | RemoteInputMessage | ClientSettingsMessage
 

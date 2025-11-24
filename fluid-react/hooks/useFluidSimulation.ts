@@ -81,9 +81,17 @@ export function useFluidSimulation(
   }, [config, isInitialized]);
 
   // Handle pointer events
-  const handlePointerDown = useCallback((id: number, x: number, y: number) => {
-    simulationRef.current?.handlePointerDown(id, x, y);
-  }, []);
+  const handlePointerDown = useCallback(
+    (
+      id: number,
+      x: number,
+      y: number,
+      color?: { r: number; g: number; b: number }
+    ) => {
+      simulationRef.current?.handlePointerDown(id, x, y, color);
+    },
+    []
+  );
 
   const handlePointerMove = useCallback((id: number, x: number, y: number) => {
     simulationRef.current?.handlePointerMove(id, x, y);

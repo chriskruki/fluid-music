@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Settings } from 'lucide-react'
+import Link from 'next/link'
+import { Settings, Download, Home, Gamepad2 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -47,6 +48,38 @@ export function SettingsDrawer() {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`
   }
   
+  const handleExportSettings = () => {
+    // Create a clean config object for export
+    const exportConfig = {
+      ...config,
+      // Ensure colors are in a readable format
+      SPLAT_COLOR: {
+        r: config.SPLAT_COLOR.r,
+        g: config.SPLAT_COLOR.g,
+        b: config.SPLAT_COLOR.b
+      },
+      BACK_COLOR: {
+        r: config.BACK_COLOR.r,
+        g: config.BACK_COLOR.g,
+        b: config.BACK_COLOR.b
+      }
+    }
+    
+    // Convert to JSON string with pretty formatting
+    const jsonString = JSON.stringify(exportConfig, null, 2)
+    
+    // Create a blob and download
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `fluid-simulation-settings-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+  
   return (
     <Sheet open={open} onOpenChange={setOpen} modal={false}>
       <SheetTrigger asChild>
@@ -70,6 +103,30 @@ export function SettingsDrawer() {
           <SheetTitle>Simulation Settings</SheetTitle>
         </SheetHeader>
         
+        {/* Navigation Buttons */}
+        <div className="flex gap-2 mt-4 mb-6">
+          <Link href="/">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              <span>Home</span>
+            </Button>
+          </Link>
+          <Link href="/control">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Gamepad2 className="h-4 w-4" />
+              <span>Controller</span>
+            </Button>
+          </Link>
+        </div>
+        
         <Tabs defaultValue="basic" className="mt-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="basic">Basic</TabsTrigger>
@@ -80,17 +137,16 @@ export function SettingsDrawer() {
             {/* Presets */}
             <div className="space-y-2">
               <Label>Presets</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {Object.entries(presets).map(([key, preset]) => (
                   <Button
                     key={key}
                     variant="outline"
                     size="sm"
                     onClick={() => handlePresetChange(key)}
-                    className="h-auto py-2 flex flex-col"
+                    className="h-auto py-2"
                   >
                     <span className="font-semibold">{preset.name}</span>
-                    <span className="text-xs text-muted-foreground">{preset.description}</span>
                   </Button>
                 ))}
               </div>
@@ -120,15 +176,15 @@ export function SettingsDrawer() {
                   value={rgbToHex(config.SPLAT_COLOR.r, config.SPLAT_COLOR.g, config.SPLAT_COLOR.b)}
                   onChange={(e) => handleColorChange('splat', e.target.value)}
                   className="h-10 w-20 rounded border border-border bg-background"
-                  disabled={config.RAINBOW_MODE}
+                  disabled={config.COLORFUL}
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Switch
-                      checked={config.RAINBOW_MODE}
-                      onCheckedChange={(checked) => updateConfig({ RAINBOW_MODE: checked })}
+                      checked={config.COLORFUL}
+                      onCheckedChange={(checked) => updateConfig({ COLORFUL: checked })}
                     />
-                    <Label>Rainbow Mode</Label>
+                    <Label>Colorful</Label>
                   </div>
                 </div>
               </div>
@@ -302,14 +358,6 @@ export function SettingsDrawer() {
               />
             </div>
             
-            {/* Colorful */}
-            <div className="flex items-center justify-between">
-              <Label>Colorful</Label>
-              <Switch
-                checked={config.COLORFUL}
-                onCheckedChange={(checked) => updateConfig({ COLORFUL: checked })}
-              />
-            </div>
             
             {/* Color Update Speed */}
             <div className="space-y-2">
@@ -434,6 +482,18 @@ export function SettingsDrawer() {
                 max={20}
                 step={1}
               />
+            </div>
+            
+            {/* Export Settings */}
+            <div className="pt-4 border-t border-border">
+              <Button
+                onClick={handleExportSettings}
+                variant="outline"
+                className="w-full"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Settings (JSON)
+              </Button>
             </div>
           </TabsContent>
         </Tabs>
