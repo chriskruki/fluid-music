@@ -71,10 +71,12 @@ interface RemoteInputMessage extends BaseMessage {
 interface CommandMessage extends BaseMessage {
   type: 'command'
   payload: {
-    command: 'random_splats' | 'clear' | 'preset_pattern'
+    command: 'random_splats' | 'clear' | 'preset_pattern' | 'set_rainbow_mode' | 'set_splat_color'
     parameters?: {
       count?: number
       patternName?: string
+      enabled?: boolean
+      color?: string
     }
     controllerId?: string
   }

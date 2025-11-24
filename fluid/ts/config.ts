@@ -44,6 +44,8 @@ interface FluidConfig {
   SPLAT_SPEED: number
   SPLAT_COUNT: number
   SHOW_DEBUG: boolean
+  RAINBOW_MODE: boolean
+  SPLAT_COLOR: Color
 }
 
 const config: FluidConfig = {
@@ -75,7 +77,9 @@ const config: FluidConfig = {
   MIRROR_MODE: false,
   SPLAT_SPEED: 1000,
   SPLAT_COUNT: 5,
-  SHOW_DEBUG: false
+  SHOW_DEBUG: false,
+  RAINBOW_MODE: true,
+  SPLAT_COLOR: { r: 0.15, g: 0.5, b: 1.0 }
 }
 
 // Update the PointerPrototype color type

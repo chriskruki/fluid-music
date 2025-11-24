@@ -1,6 +1,6 @@
 // remote.ts - Handles remote WebSocket control events
 
-import { PointerPrototype } from './config'
+import { PointerPrototype, config } from './config'
 import { Program } from './core-classes'
 import { DoubleFBO, FBO } from './framebuffers'
 import {
@@ -235,6 +235,14 @@ function processRemoteCommand(payload: any): void {
     case 'preset_pattern':
       applyRemotePattern(parameters?.patternName || 'default')
       break
+
+    case 'set_rainbow_mode':
+      applyRainbowMode(parameters?.enabled ?? true)
+      break
+
+    case 'set_splat_color':
+      applySplatColor(parameters?.color)
+      break
   }
 }
 
@@ -298,6 +306,28 @@ export function processRemoteActions(
       beatState.active = false
     }
   }
+}
+
+/**
+ * Apply rainbow mode setting
+ */
+function applyRainbowMode(enabled: boolean): void {
+  config.RAINBOW_MODE = enabled
+}
+
+/**
+ * Apply splat color setting
+ */
+function applySplatColor(colorHex: string): void {
+  if (!colorHex || !colorHex.startsWith('#')) return
+
+  const r = parseInt(colorHex.slice(1, 3), 16) / 255
+  const g = parseInt(colorHex.slice(3, 5), 16) / 255
+  const b = parseInt(colorHex.slice(5, 7), 16) / 255
+
+  config.SPLAT_COLOR.r = r
+  config.SPLAT_COLOR.g = g
+  config.SPLAT_COLOR.b = b
 }
 
 /**

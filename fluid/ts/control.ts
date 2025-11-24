@@ -34,6 +34,30 @@ function initElements(): void {
     .getElementById('pattern-corners')
     ?.addEventListener('click', () => sendPattern('corners'))
 
+  // Initialize color controls
+  const rainbowModeCheckbox = document.getElementById('rainbow-mode') as HTMLInputElement
+  const splatColorInput = document.getElementById('splat-color') as HTMLInputElement
+
+  if (rainbowModeCheckbox) {
+    rainbowModeCheckbox.addEventListener('change', () => {
+      sendRainbowMode(rainbowModeCheckbox.checked)
+      // Enable/disable color picker based on rainbow mode
+      if (splatColorInput) {
+        splatColorInput.disabled = rainbowModeCheckbox.checked
+      }
+    })
+    // Set initial state
+    if (splatColorInput) {
+      splatColorInput.disabled = rainbowModeCheckbox.checked
+    }
+  }
+
+  if (splatColorInput) {
+    splatColorInput.addEventListener('change', () => {
+      sendSplatColor(splatColorInput.value)
+    })
+  }
+
   // Setup drawer toggle
   drawerToggle.addEventListener('click', toggleDrawer)
   drawerToggle.addEventListener('touchend', (e) => {
@@ -311,6 +335,36 @@ function sendPattern(patternName: string): void {
       command: 'preset_pattern',
       parameters: {
         patternName
+      }
+    }
+  })
+}
+
+/**
+ * Send rainbow mode command
+ */
+function sendRainbowMode(enabled: boolean): void {
+  sendMessage({
+    type: 'command',
+    payload: {
+      command: 'set_rainbow_mode',
+      parameters: {
+        enabled
+      }
+    }
+  })
+}
+
+/**
+ * Send splat color command
+ */
+function sendSplatColor(colorHex: string): void {
+  sendMessage({
+    type: 'command',
+    payload: {
+      command: 'set_splat_color',
+      parameters: {
+        color: colorHex
       }
     }
   })

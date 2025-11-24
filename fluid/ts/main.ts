@@ -326,7 +326,8 @@ function calcDeltaTime(): number {
 }
 
 function updateColors(dt: number): void {
-  if (!config.COLORFUL) return
+  // Only update colors if colorful mode is enabled AND rainbow mode is enabled
+  if (!config.COLORFUL || !config.RAINBOW_MODE) return
 
   colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED
   if (colorUpdateTimer >= 1) {

@@ -405,6 +405,16 @@ function createCornerSplats(
 }
 
 function generateColor(): Color {
+  // If rainbow mode is disabled, return the configured single color
+  if (!config.RAINBOW_MODE) {
+    return {
+      r: config.SPLAT_COLOR.r,
+      g: config.SPLAT_COLOR.g,
+      b: config.SPLAT_COLOR.b
+    }
+  }
+
+  // Rainbow mode: generate random HSV color
   let c = HSVtoRGB(Math.random(), 1.0, 1.0)
   c.r *= 0.15
   c.g *= 0.15

@@ -10,7 +10,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script type="module" crossorigin src="/assets/control-19a56830.js"></script>
+    <script type="module" crossorigin src="/assets/control-9ca14c49.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-3cfb730f.js">
     <link rel="stylesheet" href="/assets/control-6d6bbc07.css">
   </head>
@@ -126,6 +126,33 @@
             >
               Pattern Corners
             </button>
+          </div>
+
+          <!-- Color Controls -->
+          <div class="bg-gray-700 p-4 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold mb-3 text-blue-300">Splat Colors</h2>
+            <div class="space-y-4">
+              <label class="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="rainbow-mode"
+                  checked
+                  class="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span class="text-gray-300">Rainbow Mode</span>
+              </label>
+              <div class="flex items-center space-x-3">
+                <label for="splat-color" class="text-gray-300 whitespace-nowrap"
+                  >Splat Color:</label
+                >
+                <input
+                  type="color"
+                  id="splat-color"
+                  value="#2699ff"
+                  class="w-16 h-10 rounded cursor-pointer"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Instructions -->

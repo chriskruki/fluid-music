@@ -60,6 +60,29 @@ function startGUI(
   gui.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius')
   gui.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords)
   gui.add(config, 'COLORFUL').name('colorful')
+  
+  // Color mode controls
+  let colorFolder = gui.addFolder('Splat Colors')
+  colorFolder.add(config, 'RAINBOW_MODE').name('rainbow mode')
+  // Convert RGB (0-1) to hex for color picker, and back
+  const splatColorHex = {
+    get value() {
+      const r = Math.round(config.SPLAT_COLOR.r * 255)
+      const g = Math.round(config.SPLAT_COLOR.g * 255)
+      const b = Math.round(config.SPLAT_COLOR.b * 255)
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+    },
+    set value(hex: string) {
+      const r = parseInt(hex.slice(1, 3), 16) / 255
+      const g = parseInt(hex.slice(3, 5), 16) / 255
+      const b = parseInt(hex.slice(5, 7), 16) / 255
+      config.SPLAT_COLOR.r = r
+      config.SPLAT_COLOR.g = g
+      config.SPLAT_COLOR.b = b
+    }
+  }
+  colorFolder.addColor(splatColorHex, 'value').name('splat color')
+  
   gui.add(config, 'PAUSED').name('paused').listen()
   gui.add(config, 'SPLAT_SPEED', 100, 2000).name('splat speed') // New setting for splat speed
   gui.add(config, 'SPLAT_COUNT', 1, 50).name('splat count') // New setting for splat count

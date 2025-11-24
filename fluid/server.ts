@@ -84,10 +84,12 @@ interface RemoteInputMessage extends BaseMessage {
 interface CommandMessage extends BaseMessage {
   type: 'command'
   payload: {
-    command: 'random_splats' | 'clear' | 'preset_pattern'
+    command: 'random_splats' | 'clear' | 'preset_pattern' | 'set_rainbow_mode' | 'set_splat_color'
     parameters?: {
       count?: number
       patternName?: string
+      enabled?: boolean
+      color?: string
     }
     controllerId?: string
   }
@@ -309,7 +311,8 @@ function sendMessage(client: WebSocket, message: Message): void {
 console.log('Current directory:', __dirname)
 
 // Resolve paths relative to the server's location
-const publicDir = path.join(__dirname, 'public')
+// In dev mode, files are in dist/public, in production they're in public
+const publicDir = path.join(__dirname, 'dist', 'public')
 const staticDir = path.join(__dirname, 'static')
 
 console.log('Public directory:', publicDir)
