@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Settings, Download, Home, Gamepad2, Check } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -18,9 +18,39 @@ export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
   const [promptValue, setPromptValue] = useState('')
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false)
+  const [promptError, setPromptError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
   const config = useFluidConfig((state) => state.config)
   const updateConfig = useFluidConfig((state) => state.updateConfig)
   const isMobile = typeof window !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent)
+  
+  // Mark component as mounted (client-side only)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  
+  // Fetch current prompt on load (client-side only)
+  useEffect(() => {
+    if (!mounted) return
+    
+    const fetchPrompt = async () => {
+      try {
+        const response = await fetch('/api/prompt')
+        if (!response.ok) {
+          throw new Error('Failed to fetch prompt')
+        }
+        const data = await response.json()
+        if (data.text) {
+          setPromptValue(data.text)
+        }
+        setPromptError(null)
+      } catch (error) {
+        setPromptError('TouchDesigner API unavailable. Please check TD_ENDPOINT configuration.')
+      }
+    }
+    
+    fetchPrompt()
+  }, [mounted])
   
   const handlePresetChange = (presetName: string) => {
     const presetConfig = applyPreset(presetName)
@@ -54,6 +84,7 @@ export function SettingsDrawer() {
     if (!promptValue.trim()) return
     
     setIsSubmittingPrompt(true)
+    setPromptError(null)
     try {
       const response = await fetch('/api/prompt', {
         method: 'POST',
@@ -69,8 +100,9 @@ export function SettingsDrawer() {
       
       // Clear the input on success
       setPromptValue('')
+      setPromptError(null)
     } catch (error) {
-      console.error('Error submitting prompt:', error)
+      setPromptError('TouchDesigner API unavailable. Please check TD_ENDPOINT configuration.')
     } finally {
       setIsSubmittingPrompt(false)
     }
@@ -159,18 +191,26 @@ export function SettingsDrawer() {
         <div className="mt-4 mb-6 space-y-2">
           <Label>Prompt</Label>
           <div className="flex gap-2">
-            <Input
-              value={promptValue}
-              onChange={(e) => setPromptValue(e.target.value)}
-              placeholder="Enter prompt text..."
-              className="flex-1"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSubmitPrompt()
-                }
-              }}
-            />
+            <div className="flex-1 space-y-1">
+              <Input
+                value={promptValue}
+                onChange={(e) => {
+                  setPromptValue(e.target.value)
+                  setPromptError(null)
+                }}
+                placeholder="Enter prompt text..."
+                className={promptError ? 'border-destructive' : ''}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSubmitPrompt()
+                  }
+                }}
+              />
+              {promptError && (
+                <p className="text-sm text-destructive">{promptError}</p>
+              )}
+            </div>
             <Button
               onClick={handleSubmitPrompt}
               disabled={!promptValue.trim() || isSubmittingPrompt}
