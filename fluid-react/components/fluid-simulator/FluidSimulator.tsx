@@ -6,12 +6,14 @@ import { useFluidConfig } from '@/stores/fluidConfig'
 import { useWebSocket } from '@/stores/websocket'
 import { SimulationCanvas } from './SimulationCanvas'
 import { SettingsDrawer } from './SettingsDrawer'
+import { verboseLog } from '@/lib/utils/verboseLog'
 import type { Message } from '@/types/websocket'
 import type { PatternType } from '@/types/fluid'
 
 export function FluidSimulator() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const config = useFluidConfig((state) => state.config)
+  const updateConfig = useFluidConfig((state) => state.updateConfig)
   const { connect, disconnect, sendMessage, socket, isConnected } = useWebSocket()
   
   const {
@@ -46,6 +48,14 @@ export function FluidSimulator() {
         const message: Message = JSON.parse(event.data)
         
         switch (message.type) {
+          case 'simulator_config_update': {
+            // Handle config updates from controllers
+            const payload = message.payload as { config: Partial<typeof config> }
+            if (payload.config) {
+              updateConfig(payload.config)
+            }
+            break
+          }
           case 'remote_input': {
             // Handle remote input from controllers
             const payload = message.payload as {
@@ -93,18 +103,21 @@ export function FluidSimulator() {
             const payload = message.payload as {
               command: string
               parameters?: Record<string, unknown>
+              color?: { r: number; g: number; b: number }
+              colorful?: boolean
             }
             
             switch (payload.command) {
               case 'random_splats': {
                 const count = (payload.parameters?.count as number) || 10
-                createRandomSplats(count)
+                createRandomSplats(count, payload.color, payload.colorful)
                 break
               }
               case 'preset_pattern': {
                 const patternName = payload.parameters?.patternName as PatternType
                 if (patternName) {
-                  createPattern(patternName)
+                  verboseLog('[Simulator] Creating pattern with color:', { patternName, color: payload.color, colorful: payload.colorful })
+                  createPattern(patternName, payload.color, payload.colorful)
                 }
                 break
               }
@@ -157,7 +170,7 @@ export function FluidSimulator() {
     return () => {
       socket.removeEventListener('message', handleMessage)
     }
-  }, [socket, isConnected, isInitialized, handlePointerDown, handlePointerMove, handlePointerUp, createPattern, createRandomSplats])
+  }, [socket, isConnected, isInitialized, handlePointerDown, handlePointerMove, handlePointerUp, createPattern, createRandomSplats, updateConfig])
   
   return (
     <div className="relative w-full h-full">

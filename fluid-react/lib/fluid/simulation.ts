@@ -143,10 +143,26 @@ export function multipleSplats(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
+  const getColor = (): { r: number; g: number; b: number } => {
+    if (overrideColorful) {
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0)
+      c.r *= 0.15
+      c.g *= 0.15
+      c.b *= 0.15
+      return c
+    }
+    if (overrideColor) {
+      return { ...overrideColor }
+    }
+    return generateColor(config)
+  }
+
   for (let i = 0; i < amount; i++) {
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -280,19 +296,35 @@ export function createSplatsRight(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
   const centerY = 0.5
   const splatCount = config.SPLAT_COUNT
   const splatInterval = 0.1
   const splatSpeed = config.SPLAT_SPEED
 
+  const getColor = (): { r: number; g: number; b: number } => {
+    if (overrideColorful) {
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0)
+      c.r *= 0.15
+      c.g *= 0.15
+      c.b *= 0.15
+      return c
+    }
+    if (overrideColor) {
+      return { ...overrideColor }
+    }
+    return generateColor(config)
+  }
+
   for (let i = 0; i < splatCount; i++) {
     const x = i * splatInterval
     const y = centerY
     const dx = splatSpeed
     const dy = 0
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -307,19 +339,35 @@ export function createSplatsLeft(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
   const centerY = 0.5
   const splatCount = config.SPLAT_COUNT
   const splatInterval = 0.1
   const splatSpeed = -config.SPLAT_SPEED
 
+  const getColor = (): { r: number; g: number; b: number } => {
+    if (overrideColorful) {
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0)
+      c.r *= 0.15
+      c.g *= 0.15
+      c.b *= 0.15
+      return c
+    }
+    if (overrideColor) {
+      return { ...overrideColor }
+    }
+    return generateColor(config)
+  }
+
   for (let i = 0; i < splatCount; i++) {
     const x = 1 - i * splatInterval
     const y = centerY
     const dx = splatSpeed
     const dy = 0
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -334,19 +382,35 @@ export function createSplatsUp(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
   const centerX = 0.5
   const splatCount = config.SPLAT_COUNT
   const splatInterval = 0.1
   const splatSpeed = config.SPLAT_SPEED
 
+  const getColor = (): { r: number; g: number; b: number } => {
+    if (overrideColorful) {
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0)
+      c.r *= 0.15
+      c.g *= 0.15
+      c.b *= 0.15
+      return c
+    }
+    if (overrideColor) {
+      return { ...overrideColor }
+    }
+    return generateColor(config)
+  }
+
   for (let i = 0; i < splatCount; i++) {
     const x = centerX
     const y = i * splatInterval
     const dx = 0
     const dy = splatSpeed
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -361,19 +425,35 @@ export function createSplatsDown(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
   const centerX = 0.5
   const splatCount = config.SPLAT_COUNT
   const splatInterval = 0.1
   const splatSpeed = -config.SPLAT_SPEED
 
+  const getColor = (): { r: number; g: number; b: number } => {
+    if (overrideColorful) {
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0)
+      c.r *= 0.15
+      c.g *= 0.15
+      c.b *= 0.15
+      return c
+    }
+    if (overrideColor) {
+      return { ...overrideColor }
+    }
+    return generateColor(config)
+  }
+
   for (let i = 0; i < splatCount; i++) {
     const x = centerX
     const y = 1 - i * splatInterval
     const dx = 0
     const dy = splatSpeed
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -388,18 +468,38 @@ export function createSplatsHorizontal(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
   const splatCount = config.SPLAT_COUNT
   const splatInterval = 0.1
   const splatSpeed = config.SPLAT_SPEED
+
+  const getColor = (): { r: number; g: number; b: number } => {
+    if (overrideColorful) {
+      // Generate random rainbow color
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0)
+      c.r *= 0.15
+      c.g *= 0.15
+      c.b *= 0.15
+      return c
+    }
+    if (overrideColor) {
+      console.log('[createSplatsHorizontal] Using override color:', overrideColor)
+      return { ...overrideColor }
+    }
+    const defaultColor = generateColor(config)
+    console.log('[createSplatsHorizontal] Using default color from config:', defaultColor, 'overrideColor:', overrideColor, 'overrideColorful:', overrideColorful)
+    return defaultColor
+  }
 
   for (let i = 0; i < splatCount; i++) {
     const x = 1 - i * splatInterval
     const y = 0.4
     const dx = -splatSpeed
     const dy = 0
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -411,7 +511,7 @@ export function createSplatsHorizontal(
     const y = 0.6
     const dx = splatSpeed
     const dy = 0
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -426,18 +526,35 @@ export function createSplatsVertical(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
   const splatCount = config.SPLAT_COUNT
   const splatInterval = 0.1
   const splatSpeed = config.SPLAT_SPEED
+
+  const getColor = (): { r: number; g: number; b: number } => {
+    if (overrideColorful) {
+      // Generate random rainbow color
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0)
+      c.r *= 0.15
+      c.g *= 0.15
+      c.b *= 0.15
+      return c
+    }
+    if (overrideColor) {
+      return { ...overrideColor }
+    }
+    return generateColor(config)
+  }
 
   for (let i = 0; i < splatCount; i++) {
     const x = 0.4
     const y = 1 - i * splatInterval
     const dx = 0
     const dy = -splatSpeed
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -449,7 +566,7 @@ export function createSplatsVertical(
     const y = 1 - i * splatInterval
     const dx = 0
     const dy = -splatSpeed
-    const color = generateColor(config)
+    const color = getColor()
     color.r *= 10.0
     color.g *= 10.0
     color.b *= 10.0
@@ -469,12 +586,29 @@ export function createCornerSplats(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
   const centerX = 0.5
   const centerY = 0.5
   const splatSpeed = config.SPLAT_SPEED
   const splatCount = config.SPLAT_COUNT
+
+  const getColor = (): { r: number; g: number; b: number } => {
+    if (overrideColorful) {
+      // Generate random rainbow color
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0)
+      c.r *= 0.15
+      c.g *= 0.15
+      c.b *= 0.15
+      return c
+    }
+    if (overrideColor) {
+      return { ...overrideColor }
+    }
+    return generateColor(config)
+  }
 
   // Define the corners
   const corners: Corner[] = [
@@ -489,7 +623,7 @@ export function createCornerSplats(
     for (let i = 0; i < splatCount; i++) {
       const dx = (centerX - corner.x) * splatSpeed * 20
       const dy = (centerY - corner.y) * splatSpeed * 20
-      const color = generateColor(config)
+      const color = getColor()
       color.r *= 10.0
       color.g *= 10.0
       color.b *= 10.0
@@ -581,29 +715,31 @@ export function createPattern(
   velocity: DoubleFBO,
   dye: DoubleFBO,
   canvas: HTMLCanvasElement,
-  blit: (destination: FBO) => void
+  blit: (destination: FBO) => void,
+  overrideColor?: { r: number; g: number; b: number },
+  overrideColorful?: boolean
 ): void {
   switch (pattern) {
     case 'right':
-      createSplatsRight(gl, config, splatProgram, velocity, dye, canvas, blit)
+      createSplatsRight(gl, config, splatProgram, velocity, dye, canvas, blit, overrideColor, overrideColorful)
       break
     case 'left':
-      createSplatsLeft(gl, config, splatProgram, velocity, dye, canvas, blit)
+      createSplatsLeft(gl, config, splatProgram, velocity, dye, canvas, blit, overrideColor, overrideColorful)
       break
     case 'up':
-      createSplatsUp(gl, config, splatProgram, velocity, dye, canvas, blit)
+      createSplatsUp(gl, config, splatProgram, velocity, dye, canvas, blit, overrideColor, overrideColorful)
       break
     case 'down':
-      createSplatsDown(gl, config, splatProgram, velocity, dye, canvas, blit)
+      createSplatsDown(gl, config, splatProgram, velocity, dye, canvas, blit, overrideColor, overrideColorful)
       break
     case 'horizontal':
-      createSplatsHorizontal(gl, config, splatProgram, velocity, dye, canvas, blit)
+      createSplatsHorizontal(gl, config, splatProgram, velocity, dye, canvas, blit, overrideColor, overrideColorful)
       break
     case 'vertical':
-      createSplatsVertical(gl, config, splatProgram, velocity, dye, canvas, blit)
+      createSplatsVertical(gl, config, splatProgram, velocity, dye, canvas, blit, overrideColor, overrideColorful)
       break
     case 'corners':
-      createCornerSplats(gl, config, splatProgram, velocity, dye, canvas, blit)
+      createCornerSplats(gl, config, splatProgram, velocity, dye, canvas, blit, overrideColor, overrideColorful)
       break
   }
 }

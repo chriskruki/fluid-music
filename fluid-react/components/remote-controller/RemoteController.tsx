@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react'
 import { useWebSocket } from '@/stores/websocket'
 import { useFluidConfig } from '@/stores/fluidConfig'
-import { ControllerNavigation } from './ControllerNavigation'
+import { ControllerSettingsDrawer } from './ControllerSettingsDrawer'
 import { Palette, CornerUpRight, ArrowLeftRight, ArrowUpDown, RefreshCw } from 'lucide-react'
 import type { PatternType } from '@/types/fluid'
 
@@ -337,7 +337,6 @@ export function RemoteController() {
             onClick={handleColorPickerClick}
             className="p-2 rounded hover:bg-gray-700 transition-colors"
             title="Open color picker"
-            disabled={isRainbowMode}
           >
             <Palette className="h-5 w-5 text-gray-300" />
           </button>
@@ -350,7 +349,6 @@ export function RemoteController() {
               className="w-8 h-8 rounded border-2 border-gray-600 hover:border-white transition-colors"
               style={{ backgroundColor: quickColor.hex }}
               title={quickColor.name.charAt(0).toUpperCase() + quickColor.name.slice(1)}
-              disabled={isRainbowMode}
             />
           ))}
           
@@ -403,7 +401,7 @@ export function RemoteController() {
           Disconnected
         </div>
       )}
-      <ControllerNavigation />
+      <ControllerSettingsDrawer />
     </div>
   )
 }

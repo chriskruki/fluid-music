@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   return (
@@ -27,7 +27,7 @@ export default function LandingPage() {
           transition={{ delay: 0.4, duration: 0.8 }}
           className="text-xl md:text-2xl text-gray-300"
         >
-          Interactive WebGL Fluid Simulation
+          {`Flowy McFlow Face >_<`}
         </motion.p>
       </motion.div>
 
@@ -35,33 +35,24 @@ export default function LandingPage() {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.8 }}
-        className="flex flex-col md:flex-row gap-6"
+        className="flex flex-col md:flex-row gap-6 justify-center items-center"
       >
         <Link href="/sim">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button size="lg" className="text-lg px-8 py-6">
               Simulator
             </Button>
           </motion.div>
         </Link>
         <Link href="/control">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
               Control
             </Button>
           </motion.div>
         </Link>
         <Link href="/beat">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button size="lg" variant="outline" className="text-lg px-8 py-6">
               Beat Detector
             </Button>
@@ -69,6 +60,5 @@ export default function LandingPage() {
         </Link>
       </motion.div>
     </div>
-  )
+  );
 }
-

@@ -9,6 +9,7 @@ import type { FluidConfig, PatternType } from '@/types/fluid'
 import type { WebGLExtensions, FBO, DoubleFBO, TextureObject, BlitFunction } from '@/types/webgl'
 import { defaultConfig, mergeConfig, getResolution, scaleByPixelRatio, wrap } from './config'
 import { getWebGLContext } from '@/lib/webgl/context'
+import { verboseLog } from '@/lib/utils/verboseLog'
 import { Program, Material } from '@/lib/webgl/program-utils'
 import {
   createFBO,
@@ -170,14 +171,14 @@ export class FluidSimulation {
    */
   private async initialize(): Promise<void> {
     try {
-      console.log('[FluidSimulation] Starting initialization...')
+      verboseLog('[FluidSimulation] Starting initialization...')
       
       // Get WebGL context
-      console.log('[FluidSimulation] Getting WebGL context...')
+      verboseLog('[FluidSimulation] Getting WebGL context...')
       const webglContext = getWebGLContext(this.canvas)
       this.gl = webglContext.gl
       this.ext = webglContext.ext
-      console.log('[FluidSimulation] WebGL context obtained')
+      verboseLog('[FluidSimulation] WebGL context obtained')
       
       // Mobile and capability checks
       if (this.isMobile()) {
@@ -191,11 +192,11 @@ export class FluidSimulation {
       }
       
       // Setup blit function
-      console.log('[FluidSimulation] Setting up blit function...')
+      verboseLog('[FluidSimulation] Setting up blit function...')
       this.blit = setupBlit(this.gl)
       
       // Create shader instances
-      console.log('[FluidSimulation] Creating shaders...')
+      verboseLog('[FluidSimulation] Creating shaders...')
       this.baseVertexShader = createBaseVertexShader(this.gl)
       this.blurVertexShader = createBlurVertexShader(this.gl)
       this.blurShader = createBlurShader(this.gl)
@@ -215,10 +216,10 @@ export class FluidSimulation {
       this.vorticityShader = createVorticityShader(this.gl)
       this.pressureShader = createPressureShader(this.gl)
       this.gradientSubtractShader = createGradientSubtractShader(this.gl)
-      console.log('[FluidSimulation] Shaders created')
+      verboseLog('[FluidSimulation] Shaders created')
       
       // Create programs
-      console.log('[FluidSimulation] Creating programs...')
+      verboseLog('[FluidSimulation] Creating programs...')
       this.blurProgram = new Program(this.gl, this.blurVertexShader, this.blurShader)
       this.copyProgram = new Program(this.gl, this.baseVertexShader, this.copyShader)
       this.clearProgram = new Program(this.gl, this.baseVertexShader, this.clearShader)
@@ -236,26 +237,26 @@ export class FluidSimulation {
       this.vorticityProgram = new Program(this.gl, this.baseVertexShader, this.vorticityShader)
       this.pressureProgram = new Program(this.gl, this.baseVertexShader, this.pressureShader)
       this.gradienSubtractProgram = new Program(this.gl, this.baseVertexShader, this.gradientSubtractShader)
-      console.log('[FluidSimulation] Programs created')
+      verboseLog('[FluidSimulation] Programs created')
       
       // Create display material
-      console.log('[FluidSimulation] Creating display material...')
+      verboseLog('[FluidSimulation] Creating display material...')
       this.displayMaterial = new Material(this.gl, this.baseVertexShader, displayShaderSource)
       
       // Load dithering texture (async)
-      console.log('[FluidSimulation] Loading dithering texture...')
+      verboseLog('[FluidSimulation] Loading dithering texture...')
       this.ditheringTexture = createTextureAsync(this.gl, '/LDR_LLL1_0.png')
       
       // Initialize framebuffers
-      console.log('[FluidSimulation] Initializing framebuffers...')
+      verboseLog('[FluidSimulation] Initializing framebuffers...')
       this.initFramebuffers()
-      console.log('[FluidSimulation] Framebuffers initialized')
+      verboseLog('[FluidSimulation] Framebuffers initialized')
       
-      console.log('[FluidSimulation] Updating keywords...')
+      verboseLog('[FluidSimulation] Updating keywords...')
       this.updateKeywords()
       
       // Create initial splats
-      console.log('[FluidSimulation] Creating initial splats...')
+      verboseLog('[FluidSimulation] Creating initial splats...')
       multipleSplats(
         this.gl,
         Math.floor(Math.random() * 20) + 5,
@@ -268,7 +269,7 @@ export class FluidSimulation {
       )
       
       this.isInitialized = true
-      console.log('[FluidSimulation] Initialization complete!')
+      verboseLog('[FluidSimulation] Initialization complete!')
     } catch (error) {
       console.error('[FluidSimulation] Initialization error:', error)
       this.onErrorCallback?.(error as Error)
@@ -458,7 +459,24 @@ export class FluidSimulation {
   /**
    * Create multiple random splats
    */
-  createRandomSplats(count: number): void {
+  createRandomSplats(count: number, color?: { r: number; g: number; b: number }, colorful?: boolean): void {
+    // Temporarily override config color if provided
+    const originalColor = this.config.SPLAT_COLOR
+    const originalRainbowMode = this.config.RAINBOW_MODE
+    const originalColorful = this.config.COLORFUL
+    
+    if (color !== undefined || colorful !== undefined) {
+      if (color) {
+        this.config.SPLAT_COLOR = color
+        this.config.RAINBOW_MODE = false
+        this.config.COLORFUL = false
+      }
+      if (colorful !== undefined) {
+        this.config.COLORFUL = colorful
+        this.config.RAINBOW_MODE = colorful
+      }
+    }
+    
     multipleSplats(
       this.gl,
       count,
@@ -469,12 +487,20 @@ export class FluidSimulation {
       this.canvas,
       this.blit
     )
+    
+    // Restore original config
+    if (color !== undefined || colorful !== undefined) {
+      this.config.SPLAT_COLOR = originalColor
+      this.config.RAINBOW_MODE = originalRainbowMode
+      this.config.COLORFUL = originalColorful
+    }
   }
   
   /**
    * Create pattern splats
    */
-  createPattern(pattern: PatternType): void {
+  createPattern(pattern: PatternType, color?: { r: number; g: number; b: number }, colorful?: boolean): void {
+    verboseLog('[FluidSimulation] createPattern called:', { pattern, color, colorful })
     createPattern(
       this.gl,
       pattern,
@@ -483,7 +509,9 @@ export class FluidSimulation {
       this.velocity,
       this.dye,
       this.canvas,
-      this.blit
+      this.blit,
+      color,
+      colorful
     )
   }
   

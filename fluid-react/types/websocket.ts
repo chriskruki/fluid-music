@@ -76,5 +76,12 @@ export interface RemoteInputMessage extends BaseMessage {
   }
 }
 
-export type Message = ConnectMessage | ConnectAckMessage | InputMessage | CommandMessage | BeatMessage | RemoteInputMessage | ClientSettingsMessage
+export interface SimulatorConfigUpdateMessage extends BaseMessage {
+  type: 'simulator_config_update'
+  payload: {
+    config: Partial<import('@/types/fluid').FluidConfig>
+  }
+}
+
+export type Message = ConnectMessage | ConnectAckMessage | InputMessage | CommandMessage | BeatMessage | RemoteInputMessage | ClientSettingsMessage | SimulatorConfigUpdateMessage
 

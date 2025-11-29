@@ -103,12 +103,12 @@ export function useFluidSimulation(
   }, []);
 
   // Pattern methods
-  const createPattern = useCallback((pattern: PatternType) => {
-    simulationRef.current?.createPattern(pattern);
+  const createPattern = useCallback((pattern: PatternType, color?: { r: number; g: number; b: number }, colorful?: boolean) => {
+    simulationRef.current?.createPattern(pattern, color, colorful);
   }, []);
 
-  const createRandomSplats = useCallback((count: number) => {
-    simulationRef.current?.createRandomSplats(count);
+  const createRandomSplats = useCallback((count: number, color?: { r: number; g: number; b: number }, colorful?: boolean) => {
+    simulationRef.current?.createRandomSplats(count, color, colorful);
   }, []);
 
   const setPointerColor = useCallback((id: number, color: { r: number; g: number; b: number }) => {

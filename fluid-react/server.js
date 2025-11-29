@@ -4,6 +4,13 @@ const next = require('next')
 const { WebSocketServer } = require('ws')
 const { v4: uuidv4 } = require('uuid')
 
+// Verbose logging utility
+function verboseLog(...args) {
+  if (process.env.FLUID_VERBOSE === 'true' || process.env.FLUID_VERBOSE === '1') {
+    console.log('[FLUID]', ...args)
+  }
+}
+
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
 const port = parseInt(process.env.PORT || '3000', 10)
@@ -150,15 +157,44 @@ app.prepare().then(() => {
           }
           // Handle commands from controllers
           else if (message.type === 'command' && clientRole === 'controller') {
-            const command = {
-              type: 'command',
-              payload: {
+            // Handle simulator config updates specially
+            if (message.payload?.command === 'update_simulator_config') {
+              const configUpdate = {
+                type: 'simulator_config_update',
+                payload: {
+                  config: message.payload.parameters?.config || {}
+                },
+                timestamp: Date.now()
+              }
+              broadcastToSimulators(configUpdate)
+            } else {
+              // Other commands - include controller's color settings for pattern commands
+              const settings = clientSettings.get(clientId) || { color: undefined, colorful: false }
+              const commandPayload = {
                 ...message.payload,
                 controllerId: clientId
-              },
-              timestamp: Date.now()
+              }
+              
+              // For pattern commands, include controller's color settings
+              if (message.payload?.command === 'preset_pattern' || message.payload?.command === 'random_splats') {
+                if (settings.colorful) {
+                  commandPayload.color = undefined
+                  commandPayload.colorful = true
+                } else {
+                  // Use stored color or fallback to default blue
+                  commandPayload.color = settings.color || { r: 0.0, g: 0.5 * 0.15, b: 1.0 * 0.15 }
+                  commandPayload.colorful = false
+                }
+                verboseLog('[Server] Pattern command:', { command: message.payload?.command, color: commandPayload.color, colorful: commandPayload.colorful, storedSettings: settings })
+              }
+              
+              const command = {
+                type: 'command',
+                payload: commandPayload,
+                timestamp: Date.now()
+              }
+              broadcastToSimulators(command)
             }
-            broadcastToSimulators(command)
           }
           // Handle beat events from beat detectors
           else if (message.type === 'beat' && clientRole === 'beat_detector') {

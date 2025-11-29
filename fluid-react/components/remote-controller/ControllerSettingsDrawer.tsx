@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { Settings, Home, Monitor, Check } from 'lucide-react'
 import Link from 'next/link'
-import { Settings, Download, Home, Gamepad2, Check } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -10,45 +10,19 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
-import { useFluidConfig } from '@/stores/fluidConfig'
+import { useWebSocket } from '@/stores/websocket'
 import { presets, applyPreset } from '@/lib/fluid/presets'
 import type { FluidConfig } from '@/types/fluid'
 
-export function SettingsDrawer() {
+export function ControllerSettingsDrawer() {
   const [open, setOpen] = useState(false)
   const [promptValue, setPromptValue] = useState('')
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false)
-  const config = useFluidConfig((state) => state.config)
-  const updateConfig = useFluidConfig((state) => state.updateConfig)
+  const { sendMessage } = useWebSocket()
   const isMobile = typeof window !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent)
   
-  const handlePresetChange = (presetName: string) => {
-    const presetConfig = applyPreset(presetName)
-    if (presetConfig) {
-      updateConfig(presetConfig)
-    }
-  }
-  
-  const handleColorChange = (color: 'splat' | 'background', value: string) => {
-    const hex = value.replace('#', '')
-    const r = parseInt(hex.substring(0, 2), 16) / 255
-    const g = parseInt(hex.substring(2, 4), 16) / 255
-    const b = parseInt(hex.substring(4, 6), 16) / 255
-    
-    if (color === 'splat') {
-      updateConfig({ SPLAT_COLOR: { r, g, b } })
-    } else {
-      updateConfig({ BACK_COLOR: { r: r * 255, g: g * 255, b: b * 255 } })
-    }
-  }
-  
-  const rgbToHex = (r: number, g: number, b: number): string => {
-    const toHex = (n: number) => {
-      const hex = Math.round(n * 255).toString(16)
-      return hex.length === 1 ? '0' + hex : hex
-    }
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`
-  }
+  // Local state to track current config (for UI display)
+  const [localConfig, setLocalConfig] = useState<Partial<FluidConfig>>({})
   
   const handleSubmitPrompt = async () => {
     if (!promptValue.trim()) return
@@ -76,37 +50,80 @@ export function SettingsDrawer() {
     }
   }
   
-  const handleExportSettings = () => {
-    // Create a clean config object for export
-    const exportConfig = {
-      ...config,
-      // Ensure colors are in a readable format
-      SPLAT_COLOR: {
-        r: config.SPLAT_COLOR.r,
-        g: config.SPLAT_COLOR.g,
-        b: config.SPLAT_COLOR.b
-      },
-      BACK_COLOR: {
-        r: config.BACK_COLOR.r,
-        g: config.BACK_COLOR.g,
-        b: config.BACK_COLOR.b
+  const sendConfigUpdate = (updates: Partial<FluidConfig>) => {
+    const newConfig = { ...localConfig, ...updates }
+    setLocalConfig(newConfig)
+    
+    sendMessage({
+      type: 'command',
+      payload: {
+        command: 'update_simulator_config',
+        parameters: { config: updates }
       }
-    }
-    
-    // Convert to JSON string with pretty formatting
-    const jsonString = JSON.stringify(exportConfig, null, 2)
-    
-    // Create a blob and download
-    const blob = new Blob([jsonString], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `fluid-simulation-settings-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    })
   }
+  
+  const handlePresetChange = (presetName: string) => {
+    const presetConfig = applyPreset(presetName)
+    if (presetConfig) {
+      setLocalConfig({ ...localConfig, ...presetConfig })
+      sendConfigUpdate(presetConfig)
+    }
+  }
+  
+  const handleColorChange = (color: 'splat' | 'background', value: string) => {
+    const hex = value.replace('#', '')
+    const r = parseInt(hex.substring(0, 2), 16) / 255
+    const g = parseInt(hex.substring(2, 4), 16) / 255
+    const b = parseInt(hex.substring(4, 6), 16) / 255
+    
+    if (color === 'splat') {
+      sendConfigUpdate({ SPLAT_COLOR: { r, g, b } })
+    } else {
+      sendConfigUpdate({ BACK_COLOR: { r: r * 255, g: g * 255, b: b * 255 } })
+    }
+  }
+  
+  const rgbToHex = (r: number, g: number, b: number): string => {
+    const toHex = (n: number) => {
+      const hex = Math.round(n * 255).toString(16)
+      return hex.length === 1 ? '0' + hex : hex
+    }
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+  }
+  
+  // Get current config values (use local state or defaults)
+  const getConfigValue = <K extends keyof FluidConfig>(key: K, defaultValue: FluidConfig[K]): FluidConfig[K] => {
+    return (localConfig[key] as FluidConfig[K]) ?? defaultValue
+  }
+  
+  // Default values for display
+  const config = {
+    SPLAT_RADIUS: getConfigValue('SPLAT_RADIUS', 0.13),
+    SPLAT_COLOR: getConfigValue('SPLAT_COLOR', { r: 1, g: 0.1411764705882353, b: 0.1411764705882353 }),
+    COLORFUL: getConfigValue('COLORFUL', false),
+    MIRROR_MODE: getConfigValue('MIRROR_MODE', false),
+    MIRROR_SEGMENTS: getConfigValue('MIRROR_SEGMENTS', 8),
+    DENSITY_DISSIPATION: getConfigValue('DENSITY_DISSIPATION', 0.5),
+    BACK_COLOR: getConfigValue('BACK_COLOR', { r: 0, g: 0, b: 0 }),
+    SIM_RESOLUTION: getConfigValue('SIM_RESOLUTION', 128),
+    DYE_RESOLUTION: getConfigValue('DYE_RESOLUTION', 1024),
+    VELOCITY_DISSIPATION: getConfigValue('VELOCITY_DISSIPATION', 0.2),
+    PRESSURE: getConfigValue('PRESSURE', 0.8),
+    PRESSURE_ITERATIONS: getConfigValue('PRESSURE_ITERATIONS', 20),
+    CURL: getConfigValue('CURL', 30),
+    SPLAT_FORCE: getConfigValue('SPLAT_FORCE', 6000),
+    SHADING: getConfigValue('SHADING', true),
+    COLOR_UPDATE_SPEED: getConfigValue('COLOR_UPDATE_SPEED', 10),
+    BLOOM: getConfigValue('BLOOM', false),
+    BLOOM_ITERATIONS: getConfigValue('BLOOM_ITERATIONS', 8),
+    BLOOM_INTENSITY: getConfigValue('BLOOM_INTENSITY', 0.8),
+    BLOOM_THRESHOLD: getConfigValue('BLOOM_THRESHOLD', 0.6),
+    SUNRAYS: getConfigValue('SUNRAYS', false),
+    SUNRAYS_WEIGHT: getConfigValue('SUNRAYS_WEIGHT', 1.0),
+    SPLAT_SPEED: getConfigValue('SPLAT_SPEED', 1000),
+    SPLAT_COUNT: getConfigValue('SPLAT_COUNT', 3),
+  } as FluidConfig
   
   return (
     <Sheet open={open} onOpenChange={setOpen} modal={false}>
@@ -143,14 +160,14 @@ export function SettingsDrawer() {
               <span>Home</span>
             </Button>
           </Link>
-          <Link href="/control">
+          <Link href="/sim">
             <Button
               variant="outline"
               size="sm"
               className="flex items-center gap-2"
             >
-              <Gamepad2 className="h-4 w-4" />
-              <span>Controller</span>
+              <Monitor className="h-4 w-4" />
+              <span>Simulator</span>
             </Button>
           </Link>
         </div>
@@ -215,7 +232,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.SPLAT_RADIUS]}
-                onValueChange={([value]) => updateConfig({ SPLAT_RADIUS: value })}
+                onValueChange={([value]) => sendConfigUpdate({ SPLAT_RADIUS: value })}
                 min={0.01}
                 max={1.0}
                 step={0.01}
@@ -237,7 +254,7 @@ export function SettingsDrawer() {
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={config.COLORFUL}
-                      onCheckedChange={(checked) => updateConfig({ COLORFUL: checked })}
+                      onCheckedChange={(checked) => sendConfigUpdate({ COLORFUL: checked })}
                     />
                     <Label>Colorful</Label>
                   </div>
@@ -251,7 +268,7 @@ export function SettingsDrawer() {
                 <Label>Mirror Mode</Label>
                 <Switch
                   checked={config.MIRROR_MODE}
-                  onCheckedChange={(checked) => updateConfig({ MIRROR_MODE: checked })}
+                  onCheckedChange={(checked) => sendConfigUpdate({ MIRROR_MODE: checked })}
                 />
               </div>
               {config.MIRROR_MODE && (
@@ -262,7 +279,7 @@ export function SettingsDrawer() {
                   </div>
                   <Slider
                     value={[config.MIRROR_SEGMENTS]}
-                    onValueChange={([value]) => updateConfig({ MIRROR_SEGMENTS: Math.round(value) })}
+                    onValueChange={([value]) => sendConfigUpdate({ MIRROR_SEGMENTS: Math.round(value) })}
                     min={1}
                     max={8}
                     step={1}
@@ -279,7 +296,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.DENSITY_DISSIPATION]}
-                onValueChange={([value]) => updateConfig({ DENSITY_DISSIPATION: value })}
+                onValueChange={([value]) => sendConfigUpdate({ DENSITY_DISSIPATION: value })}
                 min={0}
                 max={4}
                 step={0.1}
@@ -307,7 +324,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.SIM_RESOLUTION]}
-                onValueChange={([value]) => updateConfig({ SIM_RESOLUTION: Math.round(value) })}
+                onValueChange={([value]) => sendConfigUpdate({ SIM_RESOLUTION: Math.round(value) })}
                 min={32}
                 max={256}
                 step={32}
@@ -322,7 +339,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.DYE_RESOLUTION]}
-                onValueChange={([value]) => updateConfig({ DYE_RESOLUTION: Math.round(value) })}
+                onValueChange={([value]) => sendConfigUpdate({ DYE_RESOLUTION: Math.round(value) })}
                 min={128}
                 max={2048}
                 step={128}
@@ -337,7 +354,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.VELOCITY_DISSIPATION]}
-                onValueChange={([value]) => updateConfig({ VELOCITY_DISSIPATION: value })}
+                onValueChange={([value]) => sendConfigUpdate({ VELOCITY_DISSIPATION: value })}
                 min={0}
                 max={1}
                 step={0.01}
@@ -352,7 +369,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.PRESSURE]}
-                onValueChange={([value]) => updateConfig({ PRESSURE: value })}
+                onValueChange={([value]) => sendConfigUpdate({ PRESSURE: value })}
                 min={0}
                 max={1}
                 step={0.01}
@@ -367,7 +384,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.PRESSURE_ITERATIONS]}
-                onValueChange={([value]) => updateConfig({ PRESSURE_ITERATIONS: Math.round(value) })}
+                onValueChange={([value]) => sendConfigUpdate({ PRESSURE_ITERATIONS: Math.round(value) })}
                 min={1}
                 max={50}
                 step={1}
@@ -382,7 +399,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.CURL]}
-                onValueChange={([value]) => updateConfig({ CURL: value })}
+                onValueChange={([value]) => sendConfigUpdate({ CURL: value })}
                 min={0}
                 max={20}
                 step={0.5}
@@ -397,7 +414,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.SPLAT_FORCE]}
-                onValueChange={([value]) => updateConfig({ SPLAT_FORCE: Math.round(value) })}
+                onValueChange={([value]) => sendConfigUpdate({ SPLAT_FORCE: Math.round(value) })}
                 min={1000}
                 max={20000}
                 step={500}
@@ -409,10 +426,9 @@ export function SettingsDrawer() {
               <Label>Shading</Label>
               <Switch
                 checked={config.SHADING}
-                onCheckedChange={(checked) => updateConfig({ SHADING: checked })}
+                onCheckedChange={(checked) => sendConfigUpdate({ SHADING: checked })}
               />
             </div>
-            
             
             {/* Color Update Speed */}
             <div className="space-y-2">
@@ -422,7 +438,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.COLOR_UPDATE_SPEED]}
-                onValueChange={([value]) => updateConfig({ COLOR_UPDATE_SPEED: Math.round(value) })}
+                onValueChange={([value]) => sendConfigUpdate({ COLOR_UPDATE_SPEED: Math.round(value) })}
                 min={0}
                 max={50}
                 step={1}
@@ -434,7 +450,7 @@ export function SettingsDrawer() {
               <Label>Bloom</Label>
               <Switch
                 checked={config.BLOOM}
-                onCheckedChange={(checked) => updateConfig({ BLOOM: checked })}
+                onCheckedChange={(checked) => sendConfigUpdate({ BLOOM: checked })}
               />
             </div>
             
@@ -447,7 +463,7 @@ export function SettingsDrawer() {
                   </div>
                   <Slider
                     value={[config.BLOOM_ITERATIONS]}
-                    onValueChange={([value]) => updateConfig({ BLOOM_ITERATIONS: Math.round(value) })}
+                    onValueChange={([value]) => sendConfigUpdate({ BLOOM_ITERATIONS: Math.round(value) })}
                     min={1}
                     max={16}
                     step={1}
@@ -460,7 +476,7 @@ export function SettingsDrawer() {
                   </div>
                   <Slider
                     value={[config.BLOOM_INTENSITY]}
-                    onValueChange={([value]) => updateConfig({ BLOOM_INTENSITY: value })}
+                    onValueChange={([value]) => sendConfigUpdate({ BLOOM_INTENSITY: value })}
                     min={0}
                     max={1}
                     step={0.01}
@@ -473,7 +489,7 @@ export function SettingsDrawer() {
                   </div>
                   <Slider
                     value={[config.BLOOM_THRESHOLD]}
-                    onValueChange={([value]) => updateConfig({ BLOOM_THRESHOLD: value })}
+                    onValueChange={([value]) => sendConfigUpdate({ BLOOM_THRESHOLD: value })}
                     min={0}
                     max={1}
                     step={0.01}
@@ -487,7 +503,7 @@ export function SettingsDrawer() {
               <Label>Sunrays</Label>
               <Switch
                 checked={config.SUNRAYS}
-                onCheckedChange={(checked) => updateConfig({ SUNRAYS: checked })}
+                onCheckedChange={(checked) => sendConfigUpdate({ SUNRAYS: checked })}
               />
             </div>
             
@@ -500,7 +516,7 @@ export function SettingsDrawer() {
                   </div>
                   <Slider
                     value={[config.SUNRAYS_WEIGHT]}
-                    onValueChange={([value]) => updateConfig({ SUNRAYS_WEIGHT: value })}
+                    onValueChange={([value]) => sendConfigUpdate({ SUNRAYS_WEIGHT: value })}
                     min={0}
                     max={2}
                     step={0.1}
@@ -517,7 +533,7 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.SPLAT_SPEED]}
-                onValueChange={([value]) => updateConfig({ SPLAT_SPEED: Math.round(value) })}
+                onValueChange={([value]) => sendConfigUpdate({ SPLAT_SPEED: Math.round(value) })}
                 min={100}
                 max={5000}
                 step={100}
@@ -532,23 +548,11 @@ export function SettingsDrawer() {
               </div>
               <Slider
                 value={[config.SPLAT_COUNT]}
-                onValueChange={([value]) => updateConfig({ SPLAT_COUNT: Math.round(value) })}
+                onValueChange={([value]) => sendConfigUpdate({ SPLAT_COUNT: Math.round(value) })}
                 min={1}
                 max={20}
                 step={1}
               />
-            </div>
-            
-            {/* Export Settings */}
-            <div className="pt-4 border-t border-border">
-              <Button
-                onClick={handleExportSettings}
-                variant="outline"
-                className="w-full"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export Settings (JSON)
-              </Button>
             </div>
           </TabsContent>
         </Tabs>
