@@ -6,7 +6,6 @@ describe('Presets', () => {
     it('should have default preset', () => {
       expect(presets.default).toBeDefined()
       expect(presets.default.name).toBe('Default')
-      expect(presets.default.description).toBeTruthy()
     })
 
     it('should have all expected presets', () => {

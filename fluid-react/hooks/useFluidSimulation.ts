@@ -86,9 +86,10 @@ export function useFluidSimulation(
       id: number,
       x: number,
       y: number,
-      color?: { r: number; g: number; b: number }
+      color?: { r: number; g: number; b: number },
+      colorful?: boolean
     ) => {
-      simulationRef.current?.handlePointerDown(id, x, y, color);
+      simulationRef.current?.handlePointerDown(id, x, y, color, colorful);
     },
     []
   );
@@ -110,6 +111,14 @@ export function useFluidSimulation(
     simulationRef.current?.createRandomSplats(count);
   }, []);
 
+  const setPointerColor = useCallback((id: number, color: { r: number; g: number; b: number }) => {
+    simulationRef.current?.setPointerColor(id, color);
+  }, []);
+
+  const setPointerColorful = useCallback((id: number, colorful: boolean) => {
+    simulationRef.current?.setPointerColorful(id, colorful);
+  }, []);
+
   return {
     isInitialized,
     error,
@@ -118,6 +127,8 @@ export function useFluidSimulation(
     handlePointerUp,
     createPattern,
     createRandomSplats,
+    setPointerColor,
+    setPointerColorful,
     simulation: simulationRef.current,
   };
 }

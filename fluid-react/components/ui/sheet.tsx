@@ -62,9 +62,9 @@ const SheetContent = React.forwardRef<
         // Prevent closing on outside click
         e.preventDefault()
       }}
-      onEscapeKeyDown={(e) => {
+      onEscapeKeyDown={() => {
         // Still allow ESC to close
-        // e.preventDefault() // Uncomment to disable ESC closing too
+        // Uncomment to disable ESC closing too
       }}
       {...props}
     >

@@ -30,6 +30,8 @@ export function RemoteController() {
   const [selectedColor, setSelectedColor] = useState(DEFAULT_BLUE_HEX)
   const [isRainbowMode, setIsRainbowMode] = useState(false)
   const colorInputRef = useRef<HTMLInputElement>(null)
+  const isDraggingRef = useRef(false)
+  const canvasRectRef = useRef<DOMRect | null>(null)
   
   // Get the current color to use (local color, default is blue)
   const currentColor = localColor
@@ -128,10 +130,63 @@ export function RemoteController() {
     return { x, y }
   }, [])
   
+  const handleGlobalMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingRef.current || !canvasRectRef.current) return
+    
+    const { x, y } = getNormalizedCoords(e.clientX, e.clientY, canvasRectRef.current)
+    
+    sendMessage({
+      type: 'input',
+      payload: {
+        eventType: 'mousemove',
+        position: { x, y },
+        pointerId: -1
+      }
+    })
+  }, [sendMessage, getNormalizedCoords])
+  
+  const handleGlobalMouseUp = useCallback((e: MouseEvent) => {
+    if (!isDraggingRef.current || !canvasRectRef.current) return
+    
+    isDraggingRef.current = false
+    const { x, y } = getNormalizedCoords(e.clientX, e.clientY, canvasRectRef.current)
+    
+    sendMessage({
+      type: 'input',
+      payload: {
+        eventType: 'mouseup',
+        position: { x, y },
+        pointerId: -1
+      }
+    })
+    
+    canvasRectRef.current = null
+    
+    // Remove global listeners
+    window.removeEventListener('mousemove', handleGlobalMouseMove)
+    window.removeEventListener('mouseup', handleGlobalMouseUp)
+  }, [sendMessage, getNormalizedCoords, handleGlobalMouseMove])
+  
+  // Cleanup global mouse listeners on unmount
+  useEffect(() => {
+    return () => {
+      if (isDraggingRef.current) {
+        window.removeEventListener('mousemove', handleGlobalMouseMove)
+        window.removeEventListener('mouseup', handleGlobalMouseUp)
+      }
+    }
+  }, [handleGlobalMouseMove, handleGlobalMouseUp])
+  
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     const rect = e.currentTarget.getBoundingClientRect()
+    canvasRectRef.current = rect
+    isDraggingRef.current = true
     const { x, y } = getNormalizedCoords(e.clientX, e.clientY, rect)
+    
+    // Add global listeners for dragging
+    window.addEventListener('mousemove', handleGlobalMouseMove)
+    window.addEventListener('mouseup', handleGlobalMouseUp)
     
     sendMessage({
       type: 'input',
@@ -141,12 +196,14 @@ export function RemoteController() {
         pointerId: -1
       }
     })
-  }, [sendMessage, getNormalizedCoords])
+  }, [sendMessage, getNormalizedCoords, handleGlobalMouseMove, handleGlobalMouseUp])
   
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (e.buttons === 0) return
+    // This is a fallback for when mouse is still over the element
+    if (!isDraggingRef.current) return
     e.preventDefault()
     const rect = e.currentTarget.getBoundingClientRect()
+    canvasRectRef.current = rect
     const { x, y } = getNormalizedCoords(e.clientX, e.clientY, rect)
     
     sendMessage({
@@ -160,9 +217,15 @@ export function RemoteController() {
   }, [sendMessage, getNormalizedCoords])
   
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (!isDraggingRef.current) return
     e.preventDefault()
+    isDraggingRef.current = false
     const rect = e.currentTarget.getBoundingClientRect()
     const { x, y } = getNormalizedCoords(e.clientX, e.clientY, rect)
+    
+    // Remove global listeners
+    window.removeEventListener('mousemove', handleGlobalMouseMove)
+    window.removeEventListener('mouseup', handleGlobalMouseUp)
     
     sendMessage({
       type: 'input',
@@ -172,7 +235,9 @@ export function RemoteController() {
         pointerId: -1
       }
     })
-  }, [sendMessage, getNormalizedCoords])
+    
+    canvasRectRef.current = null
+  }, [sendMessage, getNormalizedCoords, handleGlobalMouseMove, handleGlobalMouseUp])
   
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault()
@@ -192,8 +257,10 @@ export function RemoteController() {
   
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault()
+    if (e.touches.length === 0) return
     const touch = e.touches[0]
     const rect = e.currentTarget.getBoundingClientRect()
+    canvasRectRef.current = rect
     const { x, y } = getNormalizedCoords(touch.clientX, touch.clientY, rect)
     
     sendMessage({

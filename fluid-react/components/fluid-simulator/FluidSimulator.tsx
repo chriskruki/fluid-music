@@ -21,7 +21,9 @@ export function FluidSimulator() {
     handlePointerMove,
     handlePointerUp,
     createPattern,
-    createRandomSplats
+    createRandomSplats,
+    setPointerColor,
+    setPointerColorful
   } = useFluidSimulation(canvasRef, config)
   
   // Connect to WebSocket as simulator
@@ -69,12 +71,12 @@ export function FluidSimulator() {
               case 'mousemove':
               case 'touchmove':
                 // Update colorful mode if provided (from server stored settings)
-                if (payload.colorful !== undefined && simulationRef.current) {
-                  simulationRef.current.setPointerColorful(pointerId, payload.colorful)
+                if (payload.colorful !== undefined) {
+                  setPointerColorful(pointerId, payload.colorful)
                 }
                 // Update color if provided (only if not in colorful mode)
-                if (payload.color && !payload.colorful && simulationRef.current) {
-                  simulationRef.current.setPointerColor(pointerId, payload.color)
+                if (payload.color && !payload.colorful) {
+                  setPointerColor(pointerId, payload.color)
                 }
                 handlePointerMove(pointerId, payload.position.x, payload.position.y)
                 break
