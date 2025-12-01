@@ -14,12 +14,17 @@ import { useFluidConfig } from '@/stores/fluidConfig'
 import { presets, applyPreset } from '@/lib/fluid/presets'
 import type { FluidConfig } from '@/types/fluid'
 
-export function SettingsDrawer() {
+interface SettingsDrawerProps {
+  createRandomSplats?: (count: number, color?: { r: number; g: number; b: number }, colorful?: boolean) => void
+}
+
+export function SettingsDrawer({ createRandomSplats }: SettingsDrawerProps) {
   const [open, setOpen] = useState(false)
   const [promptValue, setPromptValue] = useState('')
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false)
   const [promptError, setPromptError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [autoRandomPattern, setAutoRandomPattern] = useState(false)
   const config = useFluidConfig((state) => state.config)
   const updateConfig = useFluidConfig((state) => state.updateConfig)
   const isMobile = typeof window !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent)
@@ -51,6 +56,21 @@ export function SettingsDrawer() {
     
     fetchPrompt()
   }, [mounted])
+  
+  // Auto-random pattern interval
+  useEffect(() => {
+    if (!autoRandomPattern || !createRandomSplats) return
+    
+    const interval = setInterval(() => {
+      const splatColor = config.SPLAT_COLOR
+      const colorful = config.RAINBOW_MODE || false
+      createRandomSplats(10, splatColor, colorful)
+    }, 5000)
+    
+    return () => {
+      clearInterval(interval)
+    }
+  }, [autoRandomPattern, createRandomSplats, config.SPLAT_COLOR, config.RAINBOW_MODE])
   
   const handlePresetChange = (presetName: string) => {
     const presetConfig = applyPreset(presetName)
@@ -245,6 +265,22 @@ export function SettingsDrawer() {
                   </Button>
                 ))}
               </div>
+            </div>
+            
+            {/* Auto Random Pattern Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="auto-random-pattern">Auto Random Pattern</Label>
+                <p className="text-sm text-muted-foreground">
+                  Trigger random pattern every 5 seconds
+                </p>
+              </div>
+              <Switch
+                id="auto-random-pattern"
+                checked={autoRandomPattern}
+                onCheckedChange={setAutoRandomPattern}
+                disabled={!createRandomSplats}
+              />
             </div>
             
             {/* Splat Radius */}

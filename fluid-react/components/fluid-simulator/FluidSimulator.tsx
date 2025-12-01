@@ -212,7 +212,7 @@ export function FluidSimulator() {
         </div>
       )}
       
-      <SettingsDrawer />
+      <SettingsDrawer createRandomSplats={createRandomSplats} />
     </div>
   )
 }
