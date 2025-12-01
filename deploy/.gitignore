@@ -1,0 +1,12 @@
+# Log files
+*.log
+deploy.log
+app.log
+
+# Environment files
+.env
+.env.local
+
+# Node modules (if any)
+node_modules/
+
