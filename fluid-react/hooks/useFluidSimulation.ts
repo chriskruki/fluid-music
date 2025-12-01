@@ -3,11 +3,12 @@
  */
 
 import { useRef, useEffect, useState, useCallback } from "react";
+import type { RefObject } from "react";
 import { FluidSimulation } from "@/lib/fluid/FluidSimulation";
 import type { FluidConfig, PatternType } from "@/types/fluid";
 
 export function useFluidSimulation(
-  canvasRef: React.RefObject<HTMLCanvasElement>,
+  canvasRef: RefObject<HTMLCanvasElement | null>,
   config: FluidConfig
 ) {
   const simulationRef = useRef<FluidSimulation | null>(null);
@@ -103,17 +104,34 @@ export function useFluidSimulation(
   }, []);
 
   // Pattern methods
-  const createPattern = useCallback((pattern: PatternType, color?: { r: number; g: number; b: number }, colorful?: boolean) => {
-    simulationRef.current?.createPattern(pattern, color, colorful);
-  }, []);
+  const createPattern = useCallback(
+    (
+      pattern: PatternType,
+      color?: { r: number; g: number; b: number },
+      colorful?: boolean
+    ) => {
+      simulationRef.current?.createPattern(pattern, color, colorful);
+    },
+    []
+  );
 
-  const createRandomSplats = useCallback((count: number, color?: { r: number; g: number; b: number }, colorful?: boolean) => {
-    simulationRef.current?.createRandomSplats(count, color, colorful);
-  }, []);
+  const createRandomSplats = useCallback(
+    (
+      count: number,
+      color?: { r: number; g: number; b: number },
+      colorful?: boolean
+    ) => {
+      simulationRef.current?.createRandomSplats(count, color, colorful);
+    },
+    []
+  );
 
-  const setPointerColor = useCallback((id: number, color: { r: number; g: number; b: number }) => {
-    simulationRef.current?.setPointerColor(id, color);
-  }, []);
+  const setPointerColor = useCallback(
+    (id: number, color: { r: number; g: number; b: number }) => {
+      simulationRef.current?.setPointerColor(id, color);
+    },
+    []
+  );
 
   const setPointerColorful = useCallback((id: number, colorful: boolean) => {
     simulationRef.current?.setPointerColorful(id, colorful);
