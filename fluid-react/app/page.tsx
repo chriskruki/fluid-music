@@ -51,10 +51,10 @@ export default function LandingPage() {
             </Button>
           </motion.div>
         </Link>
-        <Link href="/beat">
+        <Link href="/audio">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-              Beat Detector
+              Beat
             </Button>
           </motion.div>
         </Link>
